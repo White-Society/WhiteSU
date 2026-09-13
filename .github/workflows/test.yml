@@ -111,14 +111,10 @@ jobs:
           cp -f ../aarch64-linux-android/release/ksud ../manager/app/src/main/jniLibs/arm64-v8a/libksud.so
           cp -f ../x86_64-linux-android/release/ksud ../manager/app/src/main/jniLibs/x86_64/libksud.so
 
-      - name: Bypass Signing and Build Release
+      - name: Patch Build Script and Compile
         run: |
-          echo "KEYSTORE_PASSWORD='android'" >> gradle.properties
-          echo "KEY_ALIAS='androiddebugkey'" >> gradle.properties
-          echo "KEY_PASSWORD='android'" >> gradle.properties
-          echo "KEYSTORE_FILE='/home/runner/.android/debug.keystore'" >> gradle.properties
-          mkdir -p /home/runner/.android
-          keytool -genkey -v -keystore /home/runner/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -storetype PKCS12 -dname "CN=WhiteSU, O=White-Society, C=US"
+          sed -i 's/signingConfig signingConfigs.release/signingConfig signingConfigs.debug/g' app/build.gradle
+          sed -i 's/signingConfig signingConfigs.spoofed/signingConfig signingConfigs.debug/g' app/build.gradle
           chmod +x gradlew
           ./gradlew clean assembleRelease
 
