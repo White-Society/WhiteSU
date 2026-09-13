@@ -1197,10 +1197,16 @@ fun ContributorsCard() {
 
     val contributors = listOf(
         Contributor(
+            login = "MrGadget84",
+            name = "MrGadget84",
+            githubUrl = "https://github.com/MrGadget84",
+            role = "Maintainer WhiteSU",
+            donationUrl = "https://github.com/MrGadget84"
+        Contributor(
             login = "rifsxd",
             name = "Rifat Azad",
             githubUrl = "https://github.com/rifsxd",
-            role = "Lead Developer",
+            role = "Lead Developer for KernelSU-Next",
             donationUrl = "https://github.com/KernelSU-Next/KernelSU-Next/tree/dev?tab=readme-ov-file#-donations"
         ),
         Contributor(

@@ -1,5 +1,5 @@
 // IKsuInterface.aidl
-package com.mrgadget.whitesu;
+package com.rifsxd.ksunext;
 
 import android.content.pm.PackageInfo;
 import rikka.parcelablelist.ParcelableListSlice;
