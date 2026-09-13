@@ -17,5 +17,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WhiteSU"
+rootProject.name = "KernelSU-Next"
 include(":app")
