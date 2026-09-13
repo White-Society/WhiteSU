@@ -111,14 +111,20 @@ jobs:
           cp -f ../aarch64-linux-android/release/ksud ../manager/app/src/main/jniLibs/arm64-v8a/libksud.so
           cp -f ../x86_64-linux-android/release/ksud ../manager/app/src/main/jniLibs/x86_64/libksud.so
 
-      - name: Build with Gradle
+      - name: Bypass Signing and Build Release
         run: |
+          echo "KEYSTORE_PASSWORD='android'" >> gradle.properties
+          echo "KEY_ALIAS='androiddebugkey'" >> gradle.properties
+          echo "KEY_PASSWORD='android'" >> gradle.properties
+          echo "KEYSTORE_FILE='/home/runner/.android/debug.keystore'" >> gradle.properties
+          mkdir -p /home/runner/.android
+          keytool -genkey -v -keystore /home/runner/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -storetype PKCS12 -dname "CN=WhiteSU, O=White-Society, C=US"
           chmod +x gradlew
-          ./gradlew clean assembleDebug
+          ./gradlew clean assembleRelease
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         if: ${{ ( github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' )) || github.ref_type == 'tag' }}
         with:
           name: manager
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/release/*.apk
