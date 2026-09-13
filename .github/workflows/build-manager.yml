@@ -139,10 +139,12 @@ jobs:
 
       - name: Build with Gradle
         run: |
+          mkdir -p /home/runner/.android
+          keytool -genkey -v -keystore /home/runner/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=WhiteSU, O=White-Society, C=US"
           echo "KEYSTORE_PASSWORD='android'" >> gradle.properties
           echo "KEY_ALIAS='androiddebugkey'" >> gradle.properties
           echo "KEY_PASSWORD='android'" >> gradle.properties
-          echo "KEYSTORE_FILE='/usr/local/lib/android/sdk/build-tools/34.0.0/debug.keystore'" >> gradle.properties
+          echo "KEYSTORE_FILE='/home/runner/.android/debug.keystore'" >> gradle.properties
           chmod +x gradlew
           ./gradlew clean assembleRelease
 
