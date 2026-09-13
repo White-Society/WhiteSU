@@ -173,16 +173,17 @@ jobs:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           echo "[TELEGRAM] Uploading output APK files using pure Bot API..."
-          
+          TEXT_CAPTION=$(printf "<b>WhiteSU Manager Build Success!</b>\nCommit: %s" "$COMMIT_MESSAGE")
           for apk in app/build/outputs/apk/release/*.apk; do
             if [ -f "$apk" ]; then
               filename=$(basename "$apk")
               curl -F chat_id="${{ secrets.CHAT_ID }}" \
                    -F message_thread_id="${{ secrets.MESSAGE_THREAD_ID }}" \
                    -F document=@"$apk" \
-                   -F caption="<b>WhiteSU Manager Build Success!</b>%0ACommit: $COMMIT_MESSAGE" \
+                   -F caption="$TEXT_CAPTION" \
                    -F parse_mode="HTML" \
                    https://telegram.org{{ secrets.BOT_TOKEN }}/sendDocument
             fi
           done
+
 
