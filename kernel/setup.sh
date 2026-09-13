@@ -3,7 +3,7 @@ set -eu
 
 GKI_ROOT=$(pwd)
 OWNER="White-Society"
-REPO="KernelSU-Next"
+REPO="WhiteSU"
 
 display_usage() {
     echo "Usage: $0 [--cleanup | <commit-or-tag>]"
