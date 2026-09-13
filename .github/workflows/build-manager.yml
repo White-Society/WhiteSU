@@ -92,11 +92,7 @@ jobs:
       - name: Setup need_upload
         id: need_upload
         run: |
-          if [ ! -z "${{ secrets.BOT_TOKEN }}" ]; then
-            echo "UPLOAD=true" >> $GITHUB_OUTPUT
-          else
-            echo "UPLOAD=false" >> $GITHUB_OUTPUT
-          fi
+          echo "UPLOAD=false" >> $GITHUB_OUTPUT
 
       - name: Write key
         run: |
@@ -142,21 +138,14 @@ jobs:
           cp -f ../x86_64-linux-android/release/ksud ../manager/app/src/main/jniLibs/x86_64/libksud.so
 
       - name: Build with Gradle
-        run: ./gradlew clean assembleRelease
+        run: ./gradlew clean assembleDebug
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
-        if: ${{ ( github.event_name != 'pull_request' && (github.ref == 'refs/heads/stable' )) || github.ref_type == 'tag' }}
+        if: ${{ ( github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' )) || github.ref_type == 'tag' }}
         with:
           name: ${{ matrix.spoofed && 'manager-spoofed' || 'manager' }}
-          path: manager/app/build/outputs/apk/release/*.apk
-
-      - name: Upload mappings
-        uses: actions/upload-artifact@v7
-        if: ${{ ( github.event_name != 'pull_request' && (github.ref == 'refs/heads/stable' )) || github.ref_type == 'tag' }}
-        with:
-          name: ${{ matrix.spoofed && 'mappings-spoofed' || 'mappings' }}
-          path: "manager/app/build/outputs/mapping/release/"
+          path: app/build/outputs/apk/debug/*.apk
 
       - name: Bot session cache
         if: github.event_name != 'pull_request' && steps.need_upload.outputs.UPLOAD == 'true'
