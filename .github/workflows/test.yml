@@ -113,11 +113,7 @@ jobs:
 
       - name: Patch Build Script and Compile
         run: |
-          echo "KEYSTORE_FILE=" > keystore.properties
-          echo "KEYSTORE_PASSWORD=" >> keystore.properties
-          echo "KEY_ALIAS=" >> keystore.properties
-          echo "KEY_PASSWORD=" >> keystore.properties
-          sed -i 's/signingConfig signingConfigs.*/signingConfig signingConfigs.debug/g' app/build.gradle
+          sed -i 's/signingConfig .*/signingConfig signingConfigs.debug/g' app/build.gradle
           chmod +x gradlew
           ./gradlew clean assembleRelease
 
