@@ -1,65 +1,16 @@
 name: test Build Manager
 
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - '.github/workflows/build-manager.yml'
-      - '.github/workflows/build-lkm.yml'
-      - '.github/workflows/ddk-lkm.yml'
-      - '.github/workflows/ksud.yml'
-      - 'manager/**'
-      - 'kernel/**'
-      - 'userspace/**'
-  pull_request:
-    branches: [ "main" ]
-    paths:
-      - '.github/workflows/build-manager.yml'
-      - '.github/workflows/build-lkm.yml'
-      - '.github/workflows/ddk-lkm.yml'
-      - '.github/workflows/ksud.yml'
-      - 'manager/**'
-      - 'kernel/**'
-      - 'userspace/**'
-  workflow_call:
   workflow_dispatch:
 
 jobs:
-  build-lkm:
-    uses: ./.github/workflows/build-lkm.yml
-    secrets: inherit
-
-  build-ksuinit:
-    uses: ./.github/workflows/ksuinit.yml
-
   build-ksud:
-    needs: [build-lkm, build-ksuinit]
     strategy:
       matrix:
         include:
           - target: aarch64-linux-android
             os: ubuntu-latest
           - target: x86_64-linux-android
-            os: ubuntu-latest
-    uses: ./.github/workflows/ksud.yml
-    with:
-      target: ${{ matrix.target }}
-      os: ${{ matrix.os }}
-
-  build-ksud-extra:
-    needs: [build-lkm, build-ksuinit]
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-pc-windows-gnu
-            os: ubuntu-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-          - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
     uses: ./.github/workflows/ksud.yml
     with:
@@ -121,5 +72,5 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ ( github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' )) || github.ref_type == 'tag' }}
         with:
-          name: manager
-          path: app/build/outputs/apk/release/*.apk
+          name: WhiteSU-Manager
+          path: manager/app/build/outputs/apk/release/*.apk
