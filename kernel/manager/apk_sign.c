@@ -364,7 +364,7 @@ bool is_manager_apk(char *path)
 	}
 
 	// pkg is `<real package>`
-	if (strncmp(pkg, KSU_MANAGER_PACKAGE, sizeof(KSU_MANAGER_PACKAGE))) {
+	if (strncmp(pkg, "com.mrgadget.whitesu", sizeof("com.mrgadget.whitesu"))) {
 		return false;
 	}
 #endif
