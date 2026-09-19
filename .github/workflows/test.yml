@@ -89,17 +89,13 @@ jobs:
       - name: Build Manager
         run: |
           chmod +x gradlew
-          if [ -f "key.jks" ]; then
-            echo "[GRADLE] Compiling release build using injected keystore variables..."
-            ./gradlew clean assembleRelease \
-              -Pandroid.injected.signing.store.file=$(pwd)/key.jks \
-              -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}" \
-              -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
-              -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
-          else
-            echo "[GRADLE] Keystore not found, falling back to clean assembleDebug..."
-            ./gradlew clean assembleDebug
-          fi
+          ./gradlew clean assembleRelease
+          APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          APK_HASH=$(keytool -printcert -jarfile "$APK_FILE" | grep "SHA256:" | awk '{print $2}' | sed 's/://g' | tr '[:upper:]' '[:lower:]')
+          APK_SIZE=$(wc -c < "$APK_FILE")
+          echo "EXPECTED_MANAGER_HASH=$APK_HASH" >> $GITHUB_ENV
+          echo "EXPECTED_MANAGER_SIZE=$APK_SIZE" >> $GITHUB_ENV
+          echo "Successfully extracted signature hash: $APK_HASH (Size: $APK_SIZE bytes)"
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v7
