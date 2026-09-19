@@ -105,6 +105,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.spoofed && 'manager-spoofed' || 'manager' }}
-          path: |
-            manager/app/build/outputs/apk/release/*.apk
-            manager/app/build/outputs/apk/debug/*.apk
+          path: manager/app/build/outputs/apk/release/*.apk
+          if-no-files-found: ignore
