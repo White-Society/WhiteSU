@@ -29,7 +29,7 @@
   <string name="selinux_status_enforcing">Принудительный</string>
   <string name="selinux_status_permissive">Разрешающий</string>
   <string name="selinux_status_unknown">Неизвестно</string>
-  <string name="superuser">Суперпользователь</string>
+  <string name="superuser">Рут-Доступ</string>
   <string name="module_failed_to_enable">Не удалось включить модуль: %s</string>
   <string name="module_failed_to_disable">Не удалось отключить модуль %s</string>
   <string name="module_empty">Нет установленных модулей</string>
@@ -50,8 +50,8 @@
   <string name="uninstalled">Удалён</string>
   <string name="settings">Настройки</string>
   <string name="reboot_userspace">Мягкая перезагрузка</string>
-  <string name="reboot_recovery">Перезагрузить в Recovery</string>
-  <string name="reboot_bootloader">Перезагрузить в Bootloader</string>
+  <string name="reboot_recovery">Перезагрузить в Рекавери</string>
+  <string name="reboot_bootloader">Перезагрузить в Загрузчик</string>
   <string name="reboot_download">Перезагрузить в режим Download</string>
   <string name="reboot_edl">Перезагрузить в EDL</string>
   <string name="about">О программе</string>
@@ -117,15 +117,15 @@
   <string name="close">Закрыть</string>
   <string name="force_stop_app">Принудительно остановить</string>
   <string name="restart_app">Перезапустить</string>
-  <string name="settings_amoled_mode">Режим AMOLED</string>
-  <string name="settings_amoled_mode_summary">Включить полностью тёмную тему, оптимизированную для дисплеев AMOLED, чтобы снизить зрительную нагрузку и сэкономить заряд аккумулятора.</string>
-  <string name="restart_required">Требуется перезапуск</string>
+  <string name="settings_amoled_mode">Режим глубокого чёрного</string>
+  <string name="settings_amoled_mode_summary">Включить полностью тёмную тему, оптимизированную для дисплеев OLED, чтобы снизить зрительную нагрузку и сэкономить заряд аккумулятора.</string>
+  <string name="restart_required">Требуется перезагрузка</string>
   <string name="restart_app_message">Чтобы изменения вступили в силу, необходимо перезапустить приложение.</string>
   <string name="failed_to_update_sepolicy">Не удалось обновить правила SELinux для %s</string>
-  <string name="su_not_allowed">Предоставление прав суперпользователя запрещено для: %s</string>
+  <string name="su_not_allowed">Предоставление рут-доступа запрещён для: %s</string>
   <string name="module_changelog">Журнал изменений</string>
   <string name="settings_profile_template">Шаблон доступа</string>
-  <string name="settings_profile_template_summary">Правление локальными и интернет шаблонам root-доступа.</string>
+  <string name="settings_profile_template_summary">Правление локальными и интернет шаблонам рут-доступа.</string>
   <string name="app_profile_template_create">Создать шаблон</string>
   <string name="app_profile_template_edit">Изменить шаблон</string>
   <string name="app_profile_template_id">ID</string>
@@ -148,7 +148,7 @@
   <string name="module_changelog_failed">Не удалось получить журнал изменений: %s</string>
   <string name="settings_check_update">Проверять обновления</string>
   <string name="settings_check_update_summary">Автоматическая проверка обновлений при открытии приложения.</string>
-  <string name="grant_root_failed">Не удалось предоставить права root! Нажмите, чтобы перезапустить менеджер.</string>
+  <string name="grant_root_failed">Не удалось предоставить Рут-Доступ! Нажмите, чтобы перезапустить менеджер.</string>
   <string name="action">Действие</string>
   <string name="webui">Web интерфейс</string>
   <string name="open">Открыть</string>
@@ -157,7 +157,7 @@
   <string name="direct_install">Прямая установка (Рекомендуется)</string>
   <string name="select_file">Выберите файл</string>
   <string name="flash_module">Установить модуль</string>
-  <string name="flash_anykernel">Прошить AnyKernel (.zip)</string>
+  <string name="flash_anykernel">Прошить архив AK3 (.zip)</string>
   <string name="install_inactive_slot">В неактивный слот (После OTA)</string>
   <string name="install_inactive_slot_warning">Ваше устройство будет **ПРИНУДИТЕЛЬНО** загружено в текущий неактивный слот после перезагрузки!\nИспользуйте эту опцию только после завершения OTA.\nПродолжить?</string>
   <string name="install_next">Далее</string>
@@ -181,10 +181,10 @@
   <string name="customization">Персональные настройки</string>
   <string name="developer">Для разработчиков</string>
   <string name="sucompat_disabled">SUCOMPAT ОТКЛЮЧЕН</string>
-  <string name="zygisk_required">Требуется Zygisk</string>
+  <string name="zygisk_required">Требуется модуль реализации Zygisk</string>
   <string name="zygisk_status">Инъекция Zygisk</string>
   <string name="zygisk">Zygisk</string>
-  <string name="home_superuser_count_singular">Суперпользователь</string>
+  <string name="home_superuser_count_singular">Рут-Доступ</string>
   <string name="home_superuser_count_plural">Выдано прав</string>
   <string name="home_module_count_singular">Модуль</string>
   <string name="home_module_count_plural">Модулей</string>
@@ -229,7 +229,7 @@
   <string name="supported">Поддерживается</string>
   <string name="home_susfs_version">Версия SuSFS</string>
   <string name="settings_enable_su">Включить команду su</string>
-  <string name="settings_enable_su_summary">Разрешить любому приложению получать права суперпользователя с помощью команды su (существующие процессы root не будут затронуты).</string>
+  <string name="settings_enable_su_summary">Разрешить любому приложению получать рут права с помощью команды su (существующие процессы рут не будут затронуты).</string>
   <string name="settings_enable_kernel_umount">Размонтирование на уровне ядра</string>
   <string name="settings_enable_kernel_umount_summary">Осуществлять размонтирование модулей на уровне ядра.</string>
   <string name="settings_enable_avc_spoof">Применять AVC спуфинг</string>
@@ -238,7 +238,7 @@
   <string name="app_name">WhiteSU</string>
   <string name="profile_umount_modules_summary">Если этот параметр включен, то все изменения файлов, внесённые модулями, будут восстановлены для данного приложения.</string>
   <string name="settings_uninstall_temporary_message">Временно удаляет WhiteSU, восстанавливая исходное состояние после следующей перезагрузки.</string>
-  <string name="settings_uninstall_permanent_message">Полностью и навсегда удаляет WhiteSU, включая root и все модули.</string>
+  <string name="settings_uninstall_permanent_message">Полностью и навсегда удаляет WhiteSU, включая рут и все модули.</string>
   <string name="settings_restore_stock_image_message">Восстанавливает исходный образ, если резервная копия доступна. Обычно используется перед OTA-обновлением. Если Вы хотите удалить WhiteSU, пожалуйста, воспользуйтесь опцией \"Полное удаление\".</string>
   <string name="backup_success">Резервное копирование успешно завершено</string>
   <string name="backup_failed">Резервное копирование не удалось</string>
@@ -308,5 +308,5 @@
   <string name="home_lkm_custom">Custom</string>
   <string name="require_manager_version">Текущая версия менеджера WhiteSU %1$d слишком низкая для корректной работы WhiteSU. Пожалуйста, обновите версию менеджера до %2$d или выше!</string>
   <string name="require_kernel_version">Текущая версия WhiteSU %1$d слишком стара для корректной работы менеджера. Пожалуйста, обновитесь до версии %2$d или выше!</string>
-  <string name="require_kernel_version_gki">Kernel update required</string>
+  <string name="require_kernel_version_gki">Рекомендуется обновить ядро</string>
 </resources>

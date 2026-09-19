@@ -1202,6 +1202,7 @@ fun ContributorsCard() {
             githubUrl = "https://github.com/MrGadget84",
             role = "Maintainer WhiteSU",
             donationUrl = "https://github.com/MrGadget84"
+        ),
         Contributor(
             login = "rifsxd",
             name = "Rifat Azad",
