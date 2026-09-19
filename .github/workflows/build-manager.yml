@@ -102,8 +102,8 @@ jobs:
               echo KEY_ALIAS='${{ secrets.KEY_ALIAS }}'
               echo KEY_PASSWORD='${{ secrets.KEY_PASSWORD }}'
               echo KEYSTORE_FILE='key.jks'
-            } >> gradle.properties
-            echo "${{ secrets.KEYSTORE }}" | base64 -d > key.jks
+            } >> manager/gradle.properties
+            echo "${{ secrets.KEYSTORE }}" | base64 -d > manager/key.jks
           fi
 
       - name: Setup Java
