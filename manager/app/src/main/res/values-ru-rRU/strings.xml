@@ -185,7 +185,7 @@
   <string name="zygisk_status">Реализация Zygisk</string>
   <string name="zygisk">Zygisk</string>
   <string name="home_superuser_count_singular">Рут-Права</string>
-  <string name="home_superuser_count_plural">Выдано прав</string>
+  <string name="home_superuser_count_plural">Рут Права</string>
   <string name="home_module_count_singular">Модуль</string>
   <string name="home_module_count_plural">Модулей</string>
   <string name="module_sort_enabled_first">Сортировка (сначала включенные)</string>
