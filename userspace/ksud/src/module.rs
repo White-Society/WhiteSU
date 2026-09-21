@@ -487,7 +487,6 @@ pub fn regenerate_preinit_rc() -> Result<()> {
 
 pub fn handle_updated_modules() -> Result<()> {
     let modules_root = Path::new(MODULE_DIR);
-    ensure_dir_exists(modules_root)?;
     foreach_module(ModuleType::Updated, |updated_module| {
         if !updated_module.is_dir() {
             return Ok(());
@@ -536,8 +535,6 @@ fn install_module_to_system(zip: &str) -> Result<()> {
     let zip_path = PathBuf::from_str(zip)?;
     let zip_path = zip_path.canonicalize()?;
     zip_extract_file_to_memory(&zip_path, &entry_path, &mut buffer)?;
-
-    let module_prop_text = String::from_utf8_lossy(&buffer);
 
     let mut module_prop = HashMap::new();
     PropertiesIter::new_with_encoding(Cursor::new(buffer), encoding_rs::UTF_8).read_into(
