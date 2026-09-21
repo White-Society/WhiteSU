@@ -3,6 +3,7 @@ use crate::utils::*;
 use crate::{
     assets, defs, ksucalls, metamodule,
     restorecon::{restore_syscon, setsyscon},
+    risk::{contains_risk, print_risk_block, print_risk_pause_prompt, print_risk_timeout_block, RiskSeverity},
     sepolicy,
 };
 
@@ -12,8 +13,6 @@ use is_executable::is_executable;
 use java_properties::PropertiesIter;
 use log::{debug, error, info, warn};
 use regex_lite::Regex;
-use serde::Deserialize;
-use unicode_normalization::UnicodeNormalization;
 
 use std::{
     collections::{BTreeMap, HashMap},
@@ -36,10 +35,6 @@ use crate::module::ModuleType::{Active, All};
 use std::os::unix::{prelude::PermissionsExt, process::CommandExt};
 
 const INSTALLER_CONTENT: &str = include_str!("./installer.sh");
-const DEFAULT_RISK_JSON: &str = include_str!("../../../risk/risk.json");
-const REMOTE_RISK_URL: &str =
-    "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/risk/risk/risk.json";
-const RISK_CACHE_PATH: &str = concatcp!(defs::WORKING_DIR, "risk.json");
 const INSTALL_MODULE_SCRIPT: &str = concatcp!(
     INSTALLER_CONTENT,
     "\n",
@@ -125,167 +120,6 @@ fn ensure_boot_completed() -> Result<()> {
         bail!("Android is Booting!");
     }
     Ok(())
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum RiskSeverity {
-    Low,
-    Medium,
-    High,
-    Extreme,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-struct RiskGroup {
-    reason: String,
-    severity: RiskSeverity,
-    patterns: Vec<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct RiskMatch {
-    reason: String,
-    severity: RiskSeverity,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-struct RiskCatalog {
-    hash: String,
-    rules: Vec<RiskGroup>,
-}
-
-fn parse_risk_catalog(json: &[u8]) -> Result<RiskCatalog, serde_json::Error> {
-    serde_json::from_slice(json)
-}
-
-fn should_update_risk_cache(local_json: &[u8], remote_json: &[u8]) -> bool {
-    let Ok(local) = parse_risk_catalog(local_json) else {
-        return true;
-    };
-    let Ok(remote) = parse_risk_catalog(remote_json) else {
-        return true;
-    };
-
-    local.hash != remote.hash
-}
-
-fn fetch_remote_risk_json() -> Option<Vec<u8>> {
-    let output = Command::new(assets::BUSYBOX_PATH)
-        .args(["wget", "-q", "-O", "-", "--", REMOTE_RISK_URL])
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        warn!("Failed to fetch risk rules from {REMOTE_RISK_URL}");
-        return None;
-    }
-
-    Some(output.stdout)
-}
-
-fn load_risk_json() -> Vec<u8> {
-    let cache_path = Path::new(RISK_CACHE_PATH);
-    if let Err(err) = ensure_dir_exists(defs::WORKING_DIR) {
-        warn!("Failed to ensure risk cache dir exists: {err}");
-    }
-
-    let local_bytes = std::fs::read(cache_path).ok();
-    let remote_bytes = fetch_remote_risk_json();
-
-    match (local_bytes, remote_bytes) {
-        (Some(local), Some(remote)) => {
-            if should_update_risk_cache(&local, &remote) {
-                if let Err(err) = std::fs::write(cache_path, &remote) {
-                    warn!("Failed to update risk cache at {}: {err}", cache_path.display());
-                }
-                remote
-            } else {
-                local
-            }
-        }
-        (Some(local), None) => local,
-        (None, Some(remote)) => {
-            if let Err(err) = std::fs::write(cache_path, &remote) {
-                warn!("Failed to write risk cache at {}: {err}", cache_path.display());
-            }
-            remote
-        }
-        (None, None) => DEFAULT_RISK_JSON.as_bytes().to_vec(),
-    }
-}
-
-fn contains_risk(module_prop: &str) -> Option<RiskMatch> {
-    let risk_json = load_risk_json();
-    let risk: Vec<RiskGroup> = match parse_risk_catalog(&risk_json) {
-        Ok(catalog) => catalog.rules,
-        Err(err) => {
-            warn!("Failed to parse risk catalog from cache: {err}. Falling back to bundled rules.");
-            serde_json::from_str::<RiskCatalog>(DEFAULT_RISK_JSON)
-                .map(|catalog| catalog.rules)
-                .unwrap_or_default()
-        }
-    };
-
-    let normalized_properties: Vec<String> = normalize_risk_text(module_prop)
-        .split_whitespace()
-        .map(str::to_owned)
-        .collect();
-
-    risk.iter().find_map(|group| {
-        group.patterns.iter().find_map(|pattern| {
-            let normalized_pattern: Vec<String> = normalize_risk_text(pattern)
-                .split_whitespace()
-                .map(str::to_owned)
-                .collect();
-            (!normalized_pattern.is_empty()
-                && normalized_properties
-                    .windows(normalized_pattern.len())
-                    .any(|window| window == normalized_pattern.as_slice()))
-                .then(|| RiskMatch {
-                    reason: group.reason.clone(),
-                    severity: group.severity,
-                })
-        })
-    })
-}
-
-fn print_risk_block(severity: RiskSeverity, reason: &str) {
-    println!("\n❌ Installation Blocked");
-    println!("┌────────────────────────────────");
-    println!("│ Module flagged by a security rule");
-    println!("│");
-    println!("│ Severity: {:?}", severity);
-    println!("│ Reason: {}", reason);
-    println!("└─────────────────────────────────\n");
-}
-
-fn normalize_risk_text(text: &str) -> String {
-    text.nfkc()
-        .flat_map(|character| character.to_lowercase())
-        .map(|character| {
-            if character.is_alphanumeric() {
-                character
-            } else {
-                ' '
-            }
-        })
-        .collect::<String>()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn risk_cache_diff_detects_change() {
-        let local = br#"{"hash":"abc","rules":[{"reason":"demo","severity":"low","patterns":["alpha"]}]}"#;
-        let remote_same = br#"{"hash":"abc","rules":[{"reason":"demo","severity":"low","patterns":["alpha"]}]}"#;
-        let remote_diff = br#"{"hash":"def","rules":[{"reason":"demo","severity":"low","patterns":["beta"]}]}"#;
-
-        assert!(!should_update_risk_cache(local, remote_same));
-        assert!(should_update_risk_cache(local, remote_diff));
-    }
 }
 
 #[derive(PartialEq, Eq)]
@@ -654,6 +488,7 @@ pub fn regenerate_preinit_rc() -> Result<()> {
 
 pub fn handle_updated_modules() -> Result<()> {
     let modules_root = Path::new(MODULE_DIR);
+    ensure_dir_exists(modules_root)?;
     foreach_module(ModuleType::Updated, |updated_module| {
         if !updated_module.is_dir() {
             return Ok(());
@@ -707,28 +542,20 @@ fn install_module_to_system(zip: &str) -> Result<()> {
     if let Some(risk_match) = contains_risk(&module_prop_text) {
         match risk_match.severity {
             RiskSeverity::Low | RiskSeverity::Medium => {
-                println!("\n⚠️  Installation Paused");
-                println!("┌────────────────────────────────");
-                println!("│ Module flagged by a security rule");
-                println!("│");
-                println!("│ Severity: {:?}", risk_match.severity);
-                println!("│ Reason: {}", risk_match.reason);
-                println!("│");
-                println!("│ Press the volume-down key within 5 seconds to continue.");
-                println!("└─────────────────────────────────\n");
+                print_risk_pause_prompt(risk_match.severity, &risk_match.reason);
 
                 let volume_down = Command::new(assets::BUSYBOX_PATH)
                     .args([
                         "ash",
                         "-c",
-                        "(timeout 5 /system/bin/getevent -ql 2>/dev/null || timeout 5 /system/bin/getevent -ql 2>/dev/null) | grep -q 'KEY_VOLUMEDOWN'",
+                        "timeout 5 /system/bin/getevent -ql 2>/dev/null | grep -q 'KEY_VOLUMEDOWN'",
                     ])
                     .status()
                     .with_context(|| "Failed to wait for volume-down key")?;
 
                 if !volume_down.success() {
-                    print_risk_block(risk_match.severity, &risk_match.reason);
-                    bail!("Module installation blocked");
+                    print_risk_timeout_block();
+                    bail!("Module installation stopped");
                 }
 
                 println!("✅ Installation allowed after user confirmation.\n");
