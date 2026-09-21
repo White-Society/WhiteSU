@@ -119,6 +119,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
+      - name: Setup Android SDK
+        uses: actions/setup-node@v4
+
       - name: Download arm64 ksud
         uses: actions/download-artifact@v7
         with:
