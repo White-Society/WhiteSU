@@ -9,7 +9,7 @@ use unicode_normalization::UnicodeNormalization;
 
 const DEFAULT_RISK_JSON: &str = include_str!("../../../risk/risk.json");
 const REMOTE_RISK_URL: &str =
-    "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/risk/risk/risk.json";
+    "https://raw.githubusercontent.com/White-Society/WhiteSU/risk/risk/risk.json";
 const RISK_CACHE_PATH: &str = concatcp!(defs::CACHE_DIR, "risk.json");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
