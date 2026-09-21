@@ -1,1 +1,1 @@
-# KernelSU-Next installer/uninstaller script
+# WhiteSU installer/uninstaller script
