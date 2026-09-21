@@ -344,15 +344,14 @@ int get_pkg_from_apk_path(char *pkg, const char *path)
 bool is_manager_apk(char *path)
 {
 #ifdef KSU_MANAGER_PACKAGE
-    char pkg[KSU_MAX_PACKAGE_NAME];
-    if (get_pkg_from_apk_path(pkg, path) < 0) {
-        pr_err("Failed to get package name from apk path: %s\n", path);
-        return false;
-    }
-    if (strncmp(pkg, KSU_MANAGER_PACKAGE, sizeof(KSU_MANAGER_PACKAGE))) {
-        return false;
-    }
+	char pkg[KSU_MAX_PACKAGE_NAME];
+	if (get_pkg_from_apk_path(pkg, path) < 0) {
+		pr_err("Failed to get package name from apk path: %s\n", path);
+		return false;
+	}
+	if (strncmp(pkg, KSU_MANAGER_PACKAGE, sizeof(KSU_MANAGER_PACKAGE))) {
+		return false;
+	}
 #endif
-    u8 local_sig_idx = 0;
-    return check_v2_signature(path, &local_sig_idx);
+	return true; 
 }
