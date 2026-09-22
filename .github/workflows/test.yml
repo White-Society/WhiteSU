@@ -1,4 +1,4 @@
-name: Build Manager CI
+name: ABuild Manager CI
 
 on:
   push:
