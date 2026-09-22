@@ -1,4 +1,4 @@
-name: test Build Manager
+name: ABuild Manager test
 
 on:
   workflow_dispatch:

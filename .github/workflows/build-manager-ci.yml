@@ -90,12 +90,22 @@ jobs:
       - name: Setup need_upload
         id: need_upload
         run: |
-          echo "UPLOAD=false" >> $GITHUB_OUTPUT
+          if [ ! -z "${{ secrets.BOT_TOKEN }}" ]; then
+            echo "UPLOAD=true" >> $GITHUB_OUTPUT
+          else
+            echo "UPLOAD=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Decode Keystore File
+      - name: Write key
         run: |
           if [ ! -z "${{ secrets.KEYSTORE }}" ]; then
-            echo "${{ secrets.KEYSTORE }}" | base64 -d > key.jks
+            {
+              echo KEYSTORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}'
+              echo KEY_ALIAS='${{ secrets.KEY_ALIAS }}'
+              echo KEY_PASSWORD='${{ secrets.KEY_PASSWORD }}'
+              echo KEYSTORE_FILE='key.jks'
+            } >> gradle.properties
+            echo ${{ secrets.KEYSTORE }} | base64 -d > key.jks
           fi
 
       - name: Setup Java
@@ -106,9 +116,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
-
-      - name: Setup Android SDK
-        uses: actions/setup-node@v4
 
       - name: Download arm64 ksud
         uses: actions/download-artifact@v7
@@ -131,14 +138,6 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew clean assembleRelease
-          chmod +x gradlew
-          ./gradlew clean assembleRelease
-          APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          APK_SIZE=$(wc -c < "$APK_FILE")
-          APK_HASH=$(keytool -printcert -jarfile "$APK_FILE" | grep "SHA256:" | awk '{print $2}' | sed 's/://g' | tr '[:upper:]' '[:lower:]')
-          echo "EXPECTED_MANAGER_SIZE=$APK_SIZE" >> $GITHUB_ENV
-          echo "EXPECTED_MANAGER_HASH=$APK_HASH" >> $GITHUB_ENV
-          echo "Successfully injected into Compiler -> Size: $APK_SIZE, Hash: $APK_HASH"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
