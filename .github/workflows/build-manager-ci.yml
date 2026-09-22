@@ -92,16 +92,10 @@ jobs:
         run: |
           echo "UPLOAD=false" >> $GITHUB_OUTPUT
 
-      - name: Write key
+      - name: Decode Keystore File
         run: |
           if [ ! -z "${{ secrets.KEYSTORE }}" ]; then
-            {
-              echo KEYSTORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}'
-              echo KEY_ALIAS='${{ secrets.KEY_ALIAS }}'
-              echo KEY_PASSWORD='${{ secrets.KEY_PASSWORD }}'
-              echo KEYSTORE_FILE='key.jks'
-            } >> gradle.properties
-            echo ${{ secrets.KEYSTORE }} | base64 -d > key.jks
+            echo "${{ secrets.KEYSTORE }}" | base64 -d > key.jks
           fi
 
       - name: Setup Java
@@ -120,13 +114,13 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: ksud-aarch64-linux-android
-          path: ./ksud-arm64
+          path: .
 
       - name: Download x86_64 ksud
         uses: actions/download-artifact@v7
         with:
           name: ksud-x86_64-linux-android
-          path: ./ksud-x86_64
+          path: .
 
       - name: Copy ksud to app jniLibs
         run: |
@@ -135,9 +129,8 @@ jobs:
           cp -f ../aarch64-linux-android/release/ksud ../manager/app/src/main/jniLibs/arm64-v8a/libksud.so
           cp -f ../x86_64-linux-android/release/ksud ../manager/app/src/main/jniLibs/x86_64/libksud.so
 
-
-      - name: Build Manager
-        run: |
+      - name: Build with Gradle
+        run: ./gradlew clean assembleRelease
           chmod +x gradlew
           ./gradlew clean assembleRelease
           APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
@@ -162,7 +155,7 @@ jobs:
           path: "manager/app/build/outputs/mapping/release/"
 
       - name: Bot session cache
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.need_upload.outputs.UPLOAD == 'true'
         id: bot_session_cache
         uses: actions/cache@v4
         with:
@@ -170,7 +163,7 @@ jobs:
           key: ${{ runner.os }}-bot-session
 
       - name: Upload to telegram
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.need_upload.outputs.UPLOAD == 'true'
         env:
           API_ID: ${{ secrets.API_ID }}
           API_HASH: ${{ secrets.API_HASH }}
@@ -185,7 +178,7 @@ jobs:
         run: |
           if [ ! -z "${{ secrets.BOT_TOKEN }}" ]; then
             export VERSION=$(git rev-list --count HEAD)
-            APK=$(find ../manager/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+            APK=$(find ./app/build/outputs/apk/release -name "*.apk")
             pip3 install telethon
             python3 $GITHUB_WORKSPACE/scripts/ksunextbot.py $APK
           fi
