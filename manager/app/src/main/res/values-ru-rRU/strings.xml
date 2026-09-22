@@ -29,7 +29,7 @@
   <string name="selinux_status_enforcing">Принудительный</string>
   <string name="selinux_status_permissive">Разрешающий</string>
   <string name="selinux_status_unknown">Неизвестно</string>
-  <string name="superuser">Рут-Права</string>
+  <string name="superuser">Рут Права</string>
   <string name="module_failed_to_enable">Не удалось включить модуль: %s</string>
   <string name="module_failed_to_disable">Не удалось отключить модуль %s</string>
   <string name="module_empty">Нет установленных модулей</string>
@@ -51,7 +51,7 @@
   <string name="settings">Настройки</string>
   <string name="reboot_userspace">Мягкая перезагрузка</string>
   <string name="reboot_recovery">Перезагрузиться в Рекавери</string>
-  <string name="reboot_bootloader">Перезагрузить в Фастбут</string>
+  <string name="reboot_bootloader">Перезагрузиться в Фастбут</string>
   <string name="reboot_download">Перезагрузиться в режим Download</string>
   <string name="reboot_edl">Перезагрузиться в EDL</string>
   <string name="about">О программе</string>
@@ -89,7 +89,7 @@
   <string name="proceed">Далее</string>
   <string name="cancel">Отмена</string>
   <string name="about_source_code">Исходный код на %1$s</string>
-  <string name="profile">Профиль приложения</string>
+  <string name="profile">Профиль Доступа</string>
   <string name="profile_default">По умолчанию</string>
   <string name="profile_template">Шаблон</string>
   <string name="profile_custom">Свой</string>
@@ -124,7 +124,7 @@
   <string name="failed_to_update_sepolicy">Не удалось обновить правила SELinux для %s</string>
   <string name="su_not_allowed">Предоставление прав суперпользователя запрещено для: %s</string>
   <string name="module_changelog">Журнал изменений</string>
-  <string name="settings_profile_template">Шаблон доступа</string>
+  <string name="settings_profile_template">Шаблоны доступа</string>
   <string name="settings_profile_template_summary">Правление локальными и интернет шаблонам рут-доступа.</string>
   <string name="app_profile_template_create">Создать шаблон</string>
   <string name="app_profile_template_edit">Изменить шаблон</string>
@@ -149,8 +149,8 @@
   <string name="settings_check_update">Проверять обновления</string>
   <string name="settings_check_update_summary">Автоматическая проверка обновлений при открытии приложения.</string>
   <string name="grant_root_failed">Не удалось предоставить права рут! Нажмите, чтобы перезапустить менеджер.</string>
-  <string name="action">Действие</string>
-  <string name="webui">Web интерфейс</string>
+  <string name="action">Интерактивный Модуль</string>
+  <string name="webui">Web модуль</string>
   <string name="open">Открыть</string>
   <string name="enable_web_debugging">Включить отладку WebView</string>
   <string name="enable_web_debugging_summary">Можно использовать для отладки Web интерфейса. Включайте только при необходимости.</string>
@@ -178,7 +178,7 @@
   <string name="system_default">Системный</string>
   <string name="settings_banner">Включить баннеры</string>
   <string name="settings_banner_summary">Показывать фоновые баннеры для модулей.</string>
-  <string name="customization">Персональные настройки</string>
+  <string name="customization">Дополнительные настройки</string>
   <string name="developer">Для разработчиков</string>
   <string name="sucompat_disabled">SUCOMPAT ОТКЛЮЧЕН</string>
   <string name="zygisk_required">Требуется Zygisk</string>
@@ -187,13 +187,13 @@
   <string name="home_superuser_count_singular">Рут-Права</string>
   <string name="home_superuser_count_plural">Рут Права</string>
   <string name="home_module_count_singular">Модуль</string>
-  <string name="home_module_count_plural">Модулей</string>
+  <string name="home_module_count_plural">Модули</string>
   <string name="module_sort_enabled_first">Сортировка (сначала включенные)</string>
   <string name="module_sort_action_first">Сортировка (сначала со скриптом)</string>
   <string name="module_sort_webui_first">Сортировка (сначала с Web интерфейсом)</string>
-  <string name="meta_module">Мета модули</string>
+  <string name="meta_module">Мета модуль</string>
   <string name="donate">Пожертвовать</string>
-  <string name="meta_module_screen">Мета модуль</string>
+  <string name="meta_module_screen">Мета модули</string>
   <string name="latest_version">Последняя версия</string>
   <string name="module_repo_screen">Онлайн Модули</string>
   <string name="loading">Загрузка...</string>
@@ -267,7 +267,7 @@
   <string name="allow_shell_summary">Всегда разрешать adb shell вызывать команду su. Включайте только при необходимости!</string>
   <string name="enable_adb">Принудительно включить Adb при загрузке системы</string>
   <string name="enable_adb_summary">Принудительно включить отладку по USB и отключить авторизацию ADB. Не включайте эту опцию без крайней необходимости.</string>
-  <string name="advanced_options">Расширенные настройки</string>
+  <string name="advanced_options">Дополнительные настройки</string>
   <string name="expand">6</string>
   <string name="feature_status_unsupported_summary">Ядро не поддерживает эту функцию</string>
   <string name="feature_status_managed_summary">Эта функция управляется модулем</string>
@@ -278,7 +278,7 @@
   <string name="sulog_enable_action">Включить</string>
   <string name="sulog_filter_title">Фильтровать по типу</string>
   <string name="sulog_clean_title">Очистить журнал</string>
-  <string name="sulog_filter_root_execve">рут-выполнение</string>
+  <string name="sulog_filter_root_execve">доступ к рут</string>
   <string name="sulog_filter_sucompat">Классический SU</string>
   <string name="sulog_filter_ioctl_grant_root">Предоставить рут права</string>
   <string name="sulog_filter_daemon_restart">Перезапустить сервис</string>
