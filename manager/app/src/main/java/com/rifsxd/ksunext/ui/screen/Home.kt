@@ -1193,7 +1193,6 @@ fun ContributorsCard() {
     val contributors = listOf(
         Contributor(
             login = "MrGadget84",
-            name = "Tyoma",
             githubUrl = "https://github.com/MrGadget84",
             role = "WhiteSU Developer",
             donationUrl = "https://github.com/MrGadget84"
