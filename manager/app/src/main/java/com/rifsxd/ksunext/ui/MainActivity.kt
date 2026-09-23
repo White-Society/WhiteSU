@@ -667,7 +667,7 @@ private fun BottomBar(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.90f))   
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f))   
                 )
                 val itemSize = 56.dp
                 val itemSpacing = 4.dp
@@ -755,7 +755,7 @@ private fun BottomBar(
                                     modifier = Modifier
                                         .size(itemSize)
                                         .background(
-                                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.95f),
+                                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.90f),
                                             shape = RoundedCornerShape(16.dp)
                                         )
                                 )
