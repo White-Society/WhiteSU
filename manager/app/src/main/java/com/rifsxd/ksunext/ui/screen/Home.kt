@@ -329,7 +329,7 @@ private fun ModuleCard(onClick: (() -> Unit)? = null) {
 
     val moduleUpdateCount = remember(moduleViewModel.moduleList) {
         moduleViewModel.moduleList.count { module ->
-            module.enabled && (module.update || moduleViewModel.checkUpdate(module).first.isNotEmpty())
+            module.enabled && (moduleViewModel.checkUpdate(module).first.isNotEmpty())
         }
     }
 
