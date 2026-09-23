@@ -1275,7 +1275,7 @@ fun ContributorsCard() {
             login = "rifsxd",
             name = "Rifat Azad",
             githubUrl = "https://github.com/rifsxd",
-            role = "KernelSU-Next Lead Developer",
+            role = "Author KernelSU Next",
             donationUrl = "https://github.com/KernelSU-Next/KernelSU-Next/tree/dev?tab=readme-ov-file#-donations"
         )
     )
