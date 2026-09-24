@@ -83,8 +83,8 @@ sealed class ModuleRepoState {
 private const val PREFS_NAME = "module_repo_prefs"
 private const val KEY_JSON_URLS = "json_urls"
 private const val KEY_NON_FREE_ENABLED = "non_free_enabled"
-private const val DEFAULT_JSON_URL = "https://raw.githubusercontent.com/White-Society/WhiteSU-Modules-Repo/refs/heads/main/modules.json"
-private const val NON_FREE_JSON_URL = "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next-Modules-Repo/refs/heads/main/non_free_modules.json"
+private const val DEFAULT_JSON_URL = "https://raw.githubusercontent.com/MrGadget84/KernelSU-Next-Modules-Repo/refs/heads/main/modules.json"
+private const val NON_FREE_JSON_URL = "https://raw.githubusercontent.com/MrGadget84/KernelSU-Next-Modules-Repo/refs/heads/main/non_free_modules.json"
 private const val URL_SEPARATOR = "|||"
 
 private fun getModuleRepoPrefs(context: Context): SharedPreferences {

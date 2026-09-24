@@ -108,7 +108,7 @@ fun MetaModuleScreen(navigator: DestinationsNavigator) {
     val scrollState = LocalScrollState.current
     val isNavBarHidden = (scrollState?.isScrollingDown?.value ?: false) || (scrollState?.isNavBarEnabled?.value == false)
     val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + if (isNavBarHidden) 0.dp else 112.dp
-    val modulesJsonUrl = "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next-Modules-Repo/refs/heads/main/meta_modules.json"
+    val modulesJsonUrl = "https://raw.githubusercontent.com/MrGadget84/KernelSU-Next-Modules-Repo/refs/heads/main/meta_modules.json"
 
     var moduleState by remember { mutableStateOf<MetaModuleState>(MetaModuleState.Loading) }
     var selectedModule by remember { mutableStateOf<MetaModule?>(null) }
