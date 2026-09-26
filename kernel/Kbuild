@@ -87,7 +87,7 @@ endif
 
 # Calculate version if git version is available
 ifdef KSU_GIT_VERSION_VALID
-$(eval KSU_VERSION=$(shell expr 30000 + $(KSU_GIT_VERSION) + 349))
+$(eval KSU_VERSION=$(shell expr 30000 + $(KSU_GIT_VERSION) + 343))
 $(info -- KernelSU-Next version: $(KSU_VERSION))
 else
 # If there is no .git directory, use default version
@@ -124,7 +124,7 @@ $(info -- KernelSU-Next tag: $(KSU_VERSION_TAG))
 ccflags-y += -DKSU_VERSION_TAG=\"$(KSU_VERSION_TAG)\"
 
 ifndef KSU_NEXT_MANAGER_SIZE
-KSU_NEXT_MANAGER_SIZE := 0x4d0
+KSU_NEXT_MANAGER_SIZE := 0x30c
 endif
 
 ifndef KSU_NEXT_MANAGER_HASH
