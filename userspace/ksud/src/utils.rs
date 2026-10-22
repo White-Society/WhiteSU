@@ -271,7 +271,7 @@ pub fn uninstall(package_name: &str) -> Result<()> {
         out: None,
         out_name: None,
     })?;
-    println!("- Uninstall KernelSU-Next manager..");
+    println!("- Uninstall WhiteSU manager..");
     Command::new("pm")
         .args(["uninstall", package_name])
         .spawn()?;
