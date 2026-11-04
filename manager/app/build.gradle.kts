@@ -25,6 +25,12 @@ apksign {
 android {
     namespace = "com.rifsxd.ksunext"
 
+    defaultConfig {
+        applicationId = "com.mrgadget84.whitesu"
+        versionCode = managerVersionCode
+        versionName = managerVersionName
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
