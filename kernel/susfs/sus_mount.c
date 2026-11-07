@@ -147,6 +147,10 @@
 #include "susfs_abi.h"
 #include "susfs_log.h"
 #include "susfs.h"	/* module-wide declarations */
+#include "sus_mount_identity.h"
+#include "sus_mount_idmap.h"
+#include "sus_mount_policy.h"
+#include "sus_mount_view.h"
 #include "ksu_allow_gate.h"	/* the control-node gate is su's own */
 #include "susfs_kprobe.h"
 
@@ -385,133 +389,10 @@ static DEFINE_MUTEX(sus_mount_ctl_lock);
  * mount list to compare the rewritten number against.  A shown_id needs no expiry of its own:
  * an ancestor of its mount cannot be unmounted while the child is alive. */
 /* 1024 slots: the scan marks at most 720; overflow is counted and warned once. */
-#define SUS_MOUNT_IDMAP_MAX 1024
-
-/* Sorted by sus_id; mnt ids are never 0. */
-struct sus_mount_idmap_entry {
-    int sus_id;
-    int shown_id;
-    dev_t s_dev;	/* the superblock the mount lived on (see the drop note) */
-};
-
-static struct sus_mount_idmap_entry mount_idmap[SUS_MOUNT_IDMAP_MAX];
-static int n_idmap;
-static DEFINE_SPINLOCK(idmap_lock);
-static atomic_t n_idmap_recycled = ATOMIC_INIT(0);	/* stale entries dropped */
-static atomic_t n_idmap_dropped_dev = ATOMIC_INIT(0);	/* dropped at sb teardown */
-static atomic_t n_idmap_full = ATOMIC_INIT(0);		/* failed insert attempts, not distinct mounts */
-
 static atomic_t n_fdinfo_hits = ATOMIC_INIT(0);
 static atomic_t n_fdinfo_rewrites = ATOMIC_INIT(0);
 static atomic_t n_statx_hits = ATOMIC_INIT(0);
 static atomic_t n_statx_rewrites = ATOMIC_INIT(0);
-
-static void sus_mount_idmap_add(int sus_id, int shown_id, dev_t s_dev)
-{
-    unsigned long flags;
-    int lo, hi, pos;
-
-    if (sus_id <= 0 || shown_id <= 0)
-        return;
-    spin_lock_irqsave(&idmap_lock, flags);
-    /* Sorted by sus_id: binary search under the lock; inserts/deletes are scan/teardown events. */
-    lo = 0; hi = n_idmap;
-    while (lo < hi) {
-        int mid = (lo + hi) / 2;
-        if (mount_idmap[mid].sus_id < sus_id)
-            lo = mid + 1;
-        else
-            hi = mid;
-    }
-    pos = lo;
-    if (pos < n_idmap && mount_idmap[pos].sus_id == sus_id) {
-        mount_idmap[pos].shown_id = shown_id;
-        mount_idmap[pos].s_dev = s_dev;
-        goto out;
-    }
-    if (n_idmap >= SUS_MOUNT_IDMAP_MAX) {
-        /* No slot: sus_mount_shown_for() answers 0 and statx/fdinfo keep the KSU-range id. */
-        if (atomic_inc_return(&n_idmap_full) == 1)
-            pr_warn("sus_mount: id map full at %d entries - further marked mounts keep their KSU-range id in statx(STATX_MNT_ID) and fdinfo; raise SUS_MOUNT_IDMAP_MAX\n",
-                    SUS_MOUNT_IDMAP_MAX);
-        goto out;
-    }
-    memmove(&mount_idmap[pos + 1], &mount_idmap[pos],
-            (n_idmap - pos) * sizeof(mount_idmap[0]));
-    mount_idmap[pos].sus_id = sus_id;
-    mount_idmap[pos].shown_id = shown_id;
-    mount_idmap[pos].s_dev = s_dev;
-    n_idmap++;
-out:
-    spin_unlock_irqrestore(&idmap_lock, flags);
-}
-
-static void sus_mount_idmap_drop_dev(dev_t s_dev)
-{
-    unsigned long flags;
-    int i;
-
-    spin_lock_irqsave(&idmap_lock, flags);
-    for (i = 0; i < n_idmap; ) {
-        if (mount_idmap[i].s_dev == s_dev) {
-            memmove(&mount_idmap[i], &mount_idmap[i + 1],
-                    (n_idmap - i - 1) * sizeof(mount_idmap[0]));
-            n_idmap--;
-            atomic_inc(&n_idmap_dropped_dev);
-        } else {
-            i++;
-        }
-    }
-    spin_unlock_irqrestore(&idmap_lock, flags);
-}
-
-static void sus_mount_idmap_drop(int sus_id)
-{
-    unsigned long flags;
-    int lo, hi, pos;
-
-    if (sus_id <= 0)
-        return;
-    spin_lock_irqsave(&idmap_lock, flags);
-    lo = 0; hi = n_idmap;
-    while (lo < hi) {
-        int mid = (lo + hi) / 2;
-        if (mount_idmap[mid].sus_id < sus_id)
-            lo = mid + 1;
-        else
-            hi = mid;
-    }
-    pos = lo;
-    if (pos < n_idmap && mount_idmap[pos].sus_id == sus_id) {
-        memmove(&mount_idmap[pos], &mount_idmap[pos + 1],
-                (n_idmap - pos - 1) * sizeof(mount_idmap[0]));
-        n_idmap--;
-        atomic_inc(&n_idmap_recycled);
-    }
-    spin_unlock_irqrestore(&idmap_lock, flags);
-}
-
-static int sus_mount_shown_for(int sus_id)
-{
-    unsigned long flags;
-    int lo, hi, shown = 0;
-
-    if (sus_id <= 0)
-        return 0;
-    spin_lock_irqsave(&idmap_lock, flags);
-    lo = 0; hi = n_idmap;
-    while (lo < hi) {
-        int mid = (lo + hi) / 2;
-        if (mount_idmap[mid].sus_id < sus_id)
-            lo = mid + 1;
-        else
-            hi = mid;
-    }
-    if (lo < n_idmap && mount_idmap[lo].sus_id == sus_id)
-        shown = mount_idmap[lo].shown_id;
-    spin_unlock_irqrestore(&idmap_lock, flags);
-    return shown;
-}
 
 /* Upstream's susfs_get_non_sus_mnt_id_from_mnt(): climb past every marked mount
  * and report the id of the first one that is not ours.  Must be called AFTER
@@ -550,29 +431,11 @@ static int sus_mount_shown_id(struct mount *mnt)
  * root inode 1 behind and the very next tmpfs got both, i.e. a stale record hid an unrelated
  * filesystem - hence the kprobe on generic_shutdown_super() that drops every record whose
  * s_dev is going away. */
-#define SUS_MOUNT_DEVNAME_MAX 64
-#define SUS_MOUNT_IDENT_MAX 1024
 /* Defined with the scan helpers further down; the identity test needs it here. */
 static bool sus_mount_path_is_ours(const char *s);
 
-struct sus_mount_ident {
-    dev_t s_dev;
-    unsigned long root_ino;	/* 0 = free slot */
-    bool devname_is_path;
-    /* strscpy() truncates a longer devname; without this flag the record could never match
-     * its own live mount again (a truncated copy is always unequal), silently disabling
-     * this fallback. */
-    bool devname_truncated;
-    char devname[SUS_MOUNT_DEVNAME_MAX];
-};
-
-static struct sus_mount_ident mount_ident[SUS_MOUNT_IDENT_MAX];
-static int n_ident;
-static DEFINE_SPINLOCK(ident_lock);
 static atomic_t n_ident_hits = ATOMIC_INIT(0);		/* hidden by identity, not by id */
 static atomic_t n_ident_learned = ATOMIC_INIT(0);	/* ids learned while hiding */
-static atomic_t n_ident_full = ATOMIC_INIT(0);		/* records that found no slot */
-static atomic_t n_ident_dropped_dev = ATOMIC_INIT(0);	/* records dropped at sb teardown */
 static atomic_t n_sb_down = ATOMIC_INIT(0);		/* superblocks seen shut down */
 
 static int mount_dbg;
@@ -580,128 +443,6 @@ module_param_named(mount_dbg, mount_dbg, int, 0644);
 /* Diagnostic: name the fields the identity test compares, for the first few mounts the
  * hook sees, so "why did identity not match" is answerable from dmesg instead of guessed. */
 static atomic_t n_dbg_logged = ATOMIC_INIT(0);
-
-/* Device paths are not source-path identities.  A bind mount carries the source
- * mount's mnt_devname ("/dev/block/dm-N" for a /data-backed bind), and matching that
- * string against every mount sharing the device would hide the parent /data mount
- * too (issue #167).  Keep the devname fallback for real source paths only. */
-static bool sus_mount_devname_is_path(const char *name)
-{
-    return name && name[0] == '/' && strncmp(name, "/dev/", 5) != 0;
-}
-
-/* Process context.  Takes no reference on anything (see the note above): the
- * record is three numbers and a string, so a record whose mount is long gone costs
- * nothing and cannot keep a filesystem alive. */
-static void sus_mount_ident_add(struct mount *r)
-{
-    const char *devname = r->mnt_devname;
-    struct dentry *root = r->mnt.mnt_root;
-    unsigned long ino;
-    unsigned long flags;
-    int i, slot = -1;
-
-    if (!root || !root->d_inode)
-        return;
-    ino = root->d_inode->i_ino;
-    if (!ino)
-        return;
-
-    spin_lock_irqsave(&ident_lock, flags);
-    /* Re-check under the lock so two scans cannot both append; a re-enable finds them here. */
-    for (i = 0; i < n_ident; i++) {
-        if (mount_ident[i].s_dev == r->mnt.mnt_sb->s_dev &&
-            mount_ident[i].root_ino == ino)
-            goto out;
-        if (!mount_ident[i].root_ino && slot < 0)
-            slot = i;
-    }
-    if (slot < 0) {
-        if (n_ident >= SUS_MOUNT_IDENT_MAX) {
-            /* Silent truncation is a "registered but not effective" failure; say it once. */
-            if (atomic_inc_return(&n_ident_full) == 1)
-                pr_warn("sus_mount: identity table full (%d), %s is NOT recognised in other namespaces\n",
-                        SUS_MOUNT_IDENT_MAX,
-                        devname ? devname : "(no devname)");
-            goto out;
-        }
-        slot = n_ident;
-        smp_store_release(&n_ident, n_ident + 1);
-    }
-    {
-        struct sus_mount_ident *e = &mount_ident[slot];
-
-        e->s_dev = r->mnt.mnt_sb->s_dev;
-        e->devname_is_path = sus_mount_devname_is_path(devname);
-        if (e->devname_is_path) {
-            e->devname_truncated = strlen(devname) >= sizeof(e->devname);
-            strscpy(e->devname, devname, sizeof(e->devname));
-        } else {
-            e->devname[0] = '\0';
-        }
-        if (mount_dbg)
-            SUSFS_LOGI("sus_mount: ident[%d] s_dev=%u root_ino=%lu devname=%s\n",
-                    slot, (unsigned int)e->s_dev, ino,
-                    e->devname_is_path ? e->devname : "(not path-shaped)");
-        /* Set LAST: root_ino != 0 is what makes the record live for the readers. */
-        smp_store_release(&e->root_ino, ino);
-    }
-out:
-    spin_unlock_irqrestore(&ident_lock, flags);
-}
-
-/* Interrupt-context safe (kprobe pre_handler): read-only, no sleeping. */
-static bool sus_mount_ident_match(struct mount *r)
-{
-    int n = smp_load_acquire(&n_ident);
-    const char *devname = r->mnt_devname;
-    struct dentry *root = r->mnt.mnt_root;
-    unsigned long ino = (root && root->d_inode) ? root->d_inode->i_ino : 0;
-    int i;
-
-    for (i = 0; i < n; i++) {
-        const struct sus_mount_ident *e = &mount_ident[i];
-        unsigned long e_ino = smp_load_acquire(&e->root_ino);
-
-        if (!e_ino)
-            continue;	/* free or invalidated slot: neither of its keys is valid */
-        if (e_ino == ino && e->s_dev == r->mnt.mnt_sb->s_dev)
-            return true;
-        if (e->devname_is_path && devname &&
-            (e->devname_truncated
-                 ? !strncmp(e->devname, devname, sizeof(e->devname) - 1)
-                 : !strcmp(e->devname, devname)))
-            return true;
-    }
-    return false;
-}
-
-/**
- * sus_mount_ident_drop_dev() - forget every record that lived on @s_dev
- *
- * From a kprobe on generic_shutdown_super(): without it a record outlives its filesystem,
- * and the numbers it is keyed by are recyclable (measured above), so a stale record hides
- * an unrelated filesystem.  Process context, takes only our own spinlock, never sleeps.
- */
-static void sus_mount_ident_drop_dev(dev_t s_dev)
-{
-    unsigned long flags;
-    int i;
-
-    spin_lock_irqsave(&ident_lock, flags);
-    for (i = 0; i < n_ident; i++) {
-        if (smp_load_acquire(&mount_ident[i].root_ino) && mount_ident[i].s_dev == s_dev) {
-            /* The devname arm has to die first: it is tested independently of root_ino, so
-             * clearing only the inode number left the record hiding any mount that reused
-             * the source string - the stale-record bug this whole hook exists to prevent. */
-            mount_ident[i].devname_is_path = false;
-            mount_ident[i].devname[0] = '\0';
-            smp_store_release(&mount_ident[i].root_ino, 0);
-            atomic_inc(&n_ident_dropped_dev);
-        }
-    }
-    spin_unlock_irqrestore(&ident_lock, flags);
-}
 
 /* generic_shutdown_super(struct super_block *sb) - fs/super.c, EXPORT_SYMBOL, so
  * it is a real function in kallsyms and not an inlined call site.  Runs before the
@@ -726,33 +467,6 @@ static struct kprobe kp_sb_down = {
 };
 static bool kp_sb_down_ok;
 
-/* Is this mount one of KernelSU's?  Two tests, cheapest first:
- *   - the id range, which is upstream's rule and what the marking scan produces;
- *   - the identity recorded by that scan, which is what catches the same mount in
- *     a namespace the scan could not reach (see the note above). */
-static bool sus_mount_is_ours(struct mount *r)
-{
-    if ((unsigned int)r->mnt_id >= SUS_MOUNT_KSU_ID_MIN)
-        return true;
-    if (sus_mount_path_is_ours(r->mnt_devname))
-        return true;
-    return sus_mount_ident_match(r);
-}
-
-/* The id the caller is allowed to see for a mount we hide: the first ancestor
- * that is not ours.  Starts at the PARENT when the mount itself is not in the id
- * range, because an identity-recognised mount keeps a normal id and would
- * otherwise report its own (hidden) number. */
-static int sus_mount_shown_id_from(struct mount *mnt)
-{
-    if (mnt && (unsigned int)mnt->mnt_id < SUS_MOUNT_KSU_ID_MIN)
-        mnt = mnt->mnt_parent;
-    while (mnt && mnt->mnt_parent && mnt != mnt->mnt_parent &&
-           sus_mount_is_ours(mnt))
-        mnt = mnt->mnt_parent;
-    return mnt ? (int)mnt->mnt_id : 0;
-}
-
 /* Remember the id -> shown-id pair for a mount we are about to hide, so the
  * fdinfo/statx faces rewrite the very same id the app would otherwise see.  The
  * hide hooks are the only place that has a mount pointer in an app's namespace,
@@ -762,9 +476,9 @@ static void sus_mount_note_id(struct mount *r)
 {
     int shown;
 
-    if (sus_mount_shown_for((int)r->mnt_id))
+    if (sus_mount_idmap_shown_for((int)r->mnt_id))
         return;
-    shown = sus_mount_shown_id_from(r);
+    shown = sus_mount_shown_id_from(r, SUS_MOUNT_KSU_ID_MIN, sus_mount_path_is_ours);
     if (shown > 0 && shown != (int)r->mnt_id) {
         sus_mount_idmap_add((int)r->mnt_id, shown, r->mnt.mnt_sb->s_dev);
         atomic_inc(&n_ident_learned);
@@ -861,11 +575,11 @@ static void sus_mount_learn_ns(struct mnt_namespace *ns)
         r = SUS_MOUNT_ITER_MOUNT(pos);
         if (SUS_MOUNT_MNT_NOT_IN_NS(r, ns))
             continue;
-        if (!sus_mount_is_ours(r))
+        if (!sus_mount_is_ours(r, SUS_MOUNT_KSU_ID_MIN, sus_mount_path_is_ours))
             continue;
-        if (sus_mount_shown_for((int)r->mnt_id))
+        if (sus_mount_idmap_shown_for((int)r->mnt_id))
             continue;
-        shown = sus_mount_shown_id_from(r);
+        shown = sus_mount_shown_id_from(r, SUS_MOUNT_KSU_ID_MIN, sus_mount_path_is_ours);
         if (shown > 0 && shown != (int)r->mnt_id) {
             sus_mount_idmap_add((int)r->mnt_id, shown, r->mnt.mnt_sb->s_dev);
             learned++;
@@ -927,11 +641,11 @@ static int sus_mount_learn_ns_walk(struct mnt_namespace *ns)
         r = SUS_MOUNT_ITER_MOUNT(pos);
         if (SUS_MOUNT_MNT_NOT_IN_NS(r, ns))
             continue;
-        if (!sus_mount_is_ours(r))
+        if (!sus_mount_is_ours(r, SUS_MOUNT_KSU_ID_MIN, sus_mount_path_is_ours))
             continue;
-        if (sus_mount_shown_for((int)r->mnt_id))
+        if (sus_mount_idmap_shown_for((int)r->mnt_id))
             continue;
-        shown = sus_mount_shown_id_from(r);
+        shown = sus_mount_shown_id_from(r, SUS_MOUNT_KSU_ID_MIN, sus_mount_path_is_ours);
         if (shown > 0 && shown != (int)r->mnt_id) {
             sus_mount_idmap_add((int)r->mnt_id, shown, r->mnt.mnt_sb->s_dev);
             learned++;
@@ -1076,27 +790,34 @@ static int sus_mount_newmnt_entry(struct kretprobe_instance *ri, struct pt_regs 
  * and the mountpoints this rule accepts are short (/data/adb/modules/<name>/mnt). */
 static bool sus_mount_should_record(struct mount *r, char *buf, int buflen, char **why)
 {
+    struct sus_mount_view view;
     struct path p;
     char *dp;
+    bool devname_ours, path_ours = false;
 
-    if (sus_mount_path_is_ours(r->mnt_devname)) {
+    sus_mount_view_from_mount(&view, r, SUS_MOUNT_CTX_RECORD);
+    devname_ours = sus_mount_path_is_ours(r->mnt_devname);
+    if (devname_ours) {
         *why = "devname";
-        return true;
+    } else {
+        if (!pfn_d_path)
+            return false;
+        p.mnt = &r->mnt;
+        p.dentry = r->mnt.mnt_root;
+        dp = sus_mount_d_path(&p, buf, buflen);
+        if (IS_ERR_OR_NULL(dp)) {
+            atomic_inc(&n_newmnt_pathfail);
+            return false;
+        }
+        sus_mount_view_set_path(&view, dp, strlen(dp));
+        path_ours = sus_mount_path_is_ours(dp);
+        if (path_ours)
+            *why = dp;
     }
-    if (!pfn_d_path)
+    if (sus_mount_record_decide(&view, devname_ours, path_ours) !=
+        SUS_MOUNT_RECORD_TAKE)
         return false;
-    p.mnt = &r->mnt;
-    p.dentry = r->mnt.mnt_root;
-    dp = sus_mount_d_path(&p, buf, buflen);
-    if (IS_ERR_OR_NULL(dp)) {
-        atomic_inc(&n_newmnt_pathfail);
-        return false;
-    }
-    if (sus_mount_path_is_ours(dp)) {
-        *why = dp;
-        return true;
-    }
-    return false;
+    return true;
 }
 
 static int sus_mount_newmnt_ret(struct kretprobe_instance *ri, struct pt_regs *regs)
@@ -1116,7 +837,7 @@ static int sus_mount_newmnt_ret(struct kretprobe_instance *ri, struct pt_regs *r
     if (!sus_mount_should_record(r, buf, sizeof(buf), &why))
         return 0;
 
-    sus_mount_ident_add(r);
+    sus_mount_ident_add(r, mount_dbg);
     sus_mount_note_id(r);
     atomic_inc(&n_newmnt_recorded);
     SUSFS_LOGI("sus_mount: learned mount at %s (mnt_id %d, devname %s)\n",
@@ -1204,7 +925,7 @@ static bool sus_mount_fdinfo_replace_mntid(struct seq_file *m)
     if (!len)
         return false;
 
-    shown = sus_mount_shown_for((int)old);
+    shown = sus_mount_idmap_shown_for((int)old);
     if (shown <= 0)
         return false;
 
@@ -1403,7 +1124,7 @@ static int sus_mount_statx_ret(struct kretprobe_instance *ri, struct pt_regs *re
         atomic_inc(&n_statx_copyfail);
         return 0;
     }
-    new_id = sus_mount_shown_for((int)id);
+    new_id = sus_mount_idmap_shown_for((int)id);
     if (new_id <= 0) {
         atomic_inc(&n_statx_nomap);
         return 0;
@@ -1436,33 +1157,6 @@ static struct kretprobe kr_statx_do = {
 };
 static bool kr_statx_do_ok;
 
-/* n_idmap is already the live count (the array is compacted); kept as its own accessor. */
-static int sus_mount_idmap_live(void)
-{
-    unsigned long flags;
-    int i, live = 0;
-
-    spin_lock_irqsave(&idmap_lock, flags);
-    for (i = 0; i < n_idmap; i++)
-        if (mount_idmap[i].sus_id)
-            live++;
-    spin_unlock_irqrestore(&idmap_lock, flags);
-    return live;
-}
-
-static int sus_mount_ident_live(void)
-{
-    unsigned long flags;
-    int i, live = 0;
-
-    spin_lock_irqsave(&ident_lock, flags);
-    for (i = 0; i < READ_ONCE(n_ident); i++)
-        if (smp_load_acquire(&mount_ident[i].root_ino))
-            live++;
-    spin_unlock_irqrestore(&ident_lock, flags);
-    return live;
-}
-
 /* Reachability/effect counters, one line per hook: "installed" says nothing about
  * whether the rewrite ever happened. */
 static int sus_mount_stat_show(char *buf, const struct kernel_param *kp)
@@ -1482,16 +1176,16 @@ static int sus_mount_stat_show(char *buf, const struct kernel_param *kp)
                      "fdinfo: probes=%d entry=%d hits=%d rewrites=%d nolabel=%d\n"
                      "statx: entry=%d ret=%d hits=%d rewrites=%d nobuf=%d err=%d copyfail=%d nomap=%d "
                      "(sys=%d do=%d)\n",
-                     sus_mount_idmap_live(), n_idmap,
-                     sus_mount_ident_live(), READ_ONCE(n_ident), mount_registered,
+                     sus_mount_idmap_live(), sus_mount_idmap_used(),
+                     sus_mount_ident_live(), sus_mount_ident_used(), mount_registered,
                      (int)sus_mount_is_su_domain(),
                      n_show_probes,
                      atomic_read(&n_ident_hits), atomic_read(&n_ident_learned),
-                     atomic_read(&n_ident_full),
-                     atomic_read(&n_ident_dropped_dev),
-                     atomic_read(&n_idmap_recycled),
-                     atomic_read(&n_idmap_dropped_dev),
-                     atomic_read(&n_idmap_full),
+                     sus_mount_ident_full(),
+                     sus_mount_ident_dropped_dev(),
+                     sus_mount_idmap_recycled(),
+                     sus_mount_idmap_dropped_dev(),
+                     sus_mount_idmap_full(),
                      atomic_read(&n_sb_down), (int)kp_sb_down_ok,
                      atomic_read(&n_clone_walks), atomic_read(&n_clone_learned),
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 0)
@@ -1519,15 +1213,19 @@ module_param_cb(mount_stat, &sus_mount_stat_ops, NULL, 0400);
 static int sus_mount_show_pre(struct kprobe *kp, struct pt_regs *regs)
 {
     struct vfsmount *mnt = (struct vfsmount *)regs->regs[1];
+    struct sus_mount_view view;
     struct mount *r;
+    bool ours;
 
     if (!susfs_ptr_plausible(mnt))
         return 0;
     r = real_mount(mnt);
+    sus_mount_view_from_mount(&view, r, SUS_MOUNT_CTX_SHOW);
     /* Cheap path first, and NOT only the id: a KSU mount in a namespace the
      * marking scan never reached (the zygote's, hence every app's) keeps a normal
      * id - see the identity note above sus_mount_is_ours(). */
-    if (!sus_mount_is_ours(r)) {
+    ours = sus_mount_is_ours(r, SUS_MOUNT_KSU_ID_MIN, sus_mount_path_is_ours);
+    if (!ours) {
         /* This mount is not ours but carries this id right now, which is proof the
          * id was recycled if we ever learned it (see the idmap note above). */
         sus_mount_idmap_drop((int)r->mnt_id);
@@ -1541,7 +1239,8 @@ static int sus_mount_show_pre(struct kprobe *kp, struct pt_regs *regs)
     }
     /* domain gate, upstream patch:1561-1585: the su/ksu domain is not
      * touched at all, it must be able to see its own mounts. */
-    if (sus_mount_is_su_domain())
+    if (sus_mount_show_decide(&view, ours, sus_mount_is_su_domain()) ==
+        SUS_MOUNT_SHOW_VISIBLE)
         return 0;
     sus_mount_note_id(r);
     atomic_inc(&n_ident_hits);
@@ -2230,35 +1929,47 @@ static int sus_mount_scan_ns(struct mnt_namespace *ns, char *buf, unsigned long 
         if ((unsigned int)r->mnt_id >= SUS_MOUNT_KSU_ID_MIN) {
             n_skipped_marked++;
             sus_mount_idmap_add((int)r->mnt_id, sus_mount_shown_id(r), r->mnt.mnt_sb->s_dev);
-            sus_mount_ident_add(r);
+            sus_mount_ident_add(r, mount_dbg);
             continue;
         }
 
-        if (sus_mount_path_is_ours(r->mnt_devname)) {
-            n_devname++;
-            shown = r->mnt_devname;
-        } else {
-            /* meta-overlayfs style: the source is /dev/block/loopNN, so only the
-             * mount point says /data/adb/... .  d_path() of {mnt, mnt_root} is the
-             * mountpoint path show_mountinfo() prints. */
-            mnt_path.mnt = &r->mnt;
-            mnt_path.dentry = r->mnt.mnt_root;
-            dp = sus_mount_d_path(&mnt_path, buf, PATH_MAX);
-            /* Diagnostic while the matching rule is being validated: the first few
-             * mounts show what d_path() actually renders for them. */
-            if (scan_logged < 40) {
-                scan_logged++;
-                SUSFS_LOGI("sus_mount: scan %s -> %s\n", r->mnt_devname,
-                        IS_ERR_OR_NULL(dp) ? "(d_path failed)" : dp);
+        {
+            struct sus_mount_view view;
+            bool devname_ours, path_ours = false;
+
+            sus_mount_view_from_mount(&view, r, SUS_MOUNT_CTX_SCAN);
+            devname_ours = sus_mount_path_is_ours(r->mnt_devname);
+            if (devname_ours) {
+                n_devname++;
+                shown = r->mnt_devname;
+            } else {
+                /* meta-overlayfs style: the source is /dev/block/loopNN, so only the
+                 * mount point says /data/adb/... .  d_path() of {mnt, mnt_root} is the
+                 * mountpoint path show_mountinfo() prints. */
+                mnt_path.mnt = &r->mnt;
+                mnt_path.dentry = r->mnt.mnt_root;
+                dp = sus_mount_d_path(&mnt_path, buf, PATH_MAX);
+                /* Diagnostic while the matching rule is being validated: the first few
+                 * mounts show what d_path() actually renders for them. */
+                if (scan_logged < 40) {
+                    scan_logged++;
+                    SUSFS_LOGI("sus_mount: scan %s -> %s\n", r->mnt_devname,
+                            IS_ERR_OR_NULL(dp) ? "(d_path failed)" : dp);
+                }
+                if (IS_ERR_OR_NULL(dp)) {
+                    n_dpath_err++;
+                    continue;
+                }
+                n_dpath_ok++;
+                sus_mount_view_set_path(&view, dp, strlen(dp));
+                path_ours = sus_mount_path_is_ours(dp);
+                if (!path_ours)
+                    continue;
+                shown = dp;
             }
-            if (IS_ERR_OR_NULL(dp)) {
-                n_dpath_err++;
+            if (sus_mount_record_decide(&view, devname_ours, path_ours) !=
+                SUS_MOUNT_RECORD_TAKE)
                 continue;
-            }
-            n_dpath_ok++;
-            if (!sus_mount_path_is_ours(dp))
-                continue;
-            shown = dp;
         }
 
         if (used >= n_batch) {
@@ -2280,7 +1991,7 @@ static int sus_mount_scan_ns(struct mnt_namespace *ns, char *buf, unsigned long 
         sus_mount_idmap_add(new_id, sus_mount_shown_id(r), r->mnt.mnt_sb->s_dev);
         /* And the identity, so the same filesystem mounted in another namespace
          * (where this scan cannot reach) is recognised by the hide hooks. */
-        sus_mount_ident_add(r);
+        sus_mount_ident_add(r, mount_dbg);
         marked++;
     }
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 12, 0)
@@ -2387,7 +2098,7 @@ static int sus_mount_mark_ksu_mounts(void)
 
     if (marked > 0)
         SUSFS_LOGI("sus_mount: %d KSU mount(s) marked with real ids from the kernel's own mount-id allocator (>= %llu), %d identity record(s) cached\n",
-                marked, DEFAULT_KSU_MNT_ID, READ_ONCE(n_ident));
+                marked, DEFAULT_KSU_MNT_ID, sus_mount_ident_used());
     else if (marked < 0)
         SUSFS_LOGI("sus_mount: scan refused (%d), nothing marked - the reason is the pr_warn above\n",
                 marked);
@@ -2608,8 +2319,6 @@ static void sus_mount_unregister(void)
 
 void susfs_sus_mount_exit(void)
 {
-    unsigned long flags;
-
     if (sus_mount_keep_entry) {
         proc_remove(sus_mount_keep_entry);
         sus_mount_keep_entry = NULL;
@@ -2629,15 +2338,11 @@ void susfs_sus_mount_exit(void)
      * an unmounted module image cannot be kept alive by this table.  The records
      * themselves stay; after exit nothing compares against them (the hide hooks are
      * unregistered above) and a later enable re-learns them. */
-    WRITE_ONCE(n_ident, 0);
+    sus_mount_ident_reset();
 
-    /* The id map, on the other hand, IS dropped: it is keyed by an id the kernel
-     * recycles, and for as long as the module is disabled nothing observes a
-     * recycle.  A re-enable re-learns every pair from the mounts it scans. */
-    spin_lock_irqsave(&idmap_lock, flags);
-    memset(mount_idmap, 0, sizeof(mount_idmap));
-    n_idmap = 0;
-    spin_unlock_irqrestore(&idmap_lock, flags);
+    /* The id map is dropped: it is keyed by an id the kernel recycles, and for
+     * as long as the module is disabled nothing observes a recycle. */
+    sus_mount_idmap_reset();
 }
 
 static int sus_mount_register(void)
