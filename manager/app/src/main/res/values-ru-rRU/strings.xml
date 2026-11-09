@@ -67,7 +67,7 @@
   <string name="module_version_code">Код версии</string>
   <string name="module_update_json">Обновить Json</string>
   <string name="module_update_json_empty">Пусто</string>
-  <string name="enable_developer_options">Включить режим разработчика</string>
+  <string name="enable_developer_options">Для разработчиков</string>
   <string name="enable_developer_options_summary">Показать скрытые настройки и отладочную информацию, предназначенную только для разработчиков.</string>
   <string name="refresh">Обновить</string>
   <string name="show_system_apps">Показать системные приложения</string>
@@ -117,7 +117,7 @@
   <string name="close">Закрыть</string>
   <string name="force_stop_app">Принудительно остановить</string>
   <string name="restart_app">Перезапустить</string>
-  <string name="settings_amoled_mode">Режим AMOLED</string>
+  <string name="settings_amoled_mode">Режим глубокого чёрного</string>
   <string name="settings_amoled_mode_summary">Включить полностью тёмную тему, оптимизированную для дисплеев AMOLED, чтобы снизить зрительную нагрузку и сэкономить заряд аккумулятора.</string>
   <string name="restart_required">Требуется перезапуск</string>
   <string name="restart_app_message">Чтобы изменения вступили в силу, необходимо перезапустить приложение.</string>
@@ -178,7 +178,7 @@
   <string name="system_default">Системный</string>
   <string name="settings_banner">Включить баннеры</string>
   <string name="settings_banner_summary">Показывать фоновые баннеры для модулей.</string>
-  <string name="customization">Персональные настройки</string>
+  <string name="customization">Дополнительные настройки</string>
   <string name="developer">Для разработчиков</string>
   <string name="sucompat_disabled">SUCOMPAT ОТКЛЮЧЕН</string>
   <string name="zygisk_required">Требуется Zygisk</string>
@@ -327,7 +327,7 @@
   <string name="feature_status_forced_summary">Эта функция доступна только при её наличии в ядре.</string>
   <string name="susfs_load_action">Установить SuSFS LKM</string>
   <string name="susfs_load_button">Установить</string>
-  <string name="susfs_load_in_progress">Установка SUSFS LKM...</string>
+  <string name="susfs_load_in_progress">Установка SUSFS LKM</string>
   <string name="susfs_already_loaded">SUSFS уже установлен</string>
   <string name="susfs_load_summary">Установить SuSFS для дополнительной защиты</string>
   <string name="susfs_load_summary_loading">Установка SuSFS</string>
@@ -339,7 +339,7 @@
   <string name="susfs_load_success">SUSFS LKM прошит</string>
   <string name="susfs_load_failed">Не удалось загрузить SUSFS LKM</string>
   <string name="settings_shell_su_adb_only">Ограничить доступ к Рут через ADB</string>
-  <string name="settings_shell_su_adb_only_summary">Рут права могут использовать только процессы, запущенные через adbd или через KernelSUю Это предотвращает ситуацию, когда приложения могут повысить свои привилегии до уровня рут.</string>
+  <string name="settings_shell_su_adb_only_summary">Рут права могут использовать только процессы, запущенные через adbd или через KernelSU. Это предотвращает ситуацию, когда приложения могут повысить свои привилегии до уровня рут.</string>
   <string name="install_block_modules">Блокировка модулей ядра (Риски)</string>
   <string name="install_block_modules_warning">Запретите загрузку указанных модулей ядра при запуске системы. Блокировка модуля, от которого зависит работа системы, может привести к тому, что устройство зависнет на логотипе загрузки или попадет в бесконечную перезагрузку "бутлуп" (например, модуль MediaTek mkp на некоторых устройствах). Используйте эту функцию, только если уверены, что блокировка данных модулей безопасна для вашего устройства. Чтобы восстановить работоспособность, прошейте через fastboot заводской образ boot или init_boot.</string>
   <string name="install_block_modules_list">Заблокированные модули</string>
@@ -378,4 +378,6 @@
   <string name="susfs_unload_failed">Не удалось выгрузить SUSFS LKM</string>
   <string name="soft_reboot_after_module_flash">Мягкая перезагрузка после установки модуля</string>
   <string name="soft_reboot_after_module_flash_summary">Использовать мягкую перезагрузку вместо полной после установки модуля.</string>
+  <string name="settings_startup_animation">Анимированная заставка</string>
+  <string name="settings_startup_animation_summary">При открытии приложения отображать анимированную заставку.</string>
 </resources>
