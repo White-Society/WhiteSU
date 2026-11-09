@@ -246,7 +246,7 @@
   <string name="restore_success">Восстановление резервной копии успешно завершено</string>
   <string name="restore_failed">Восстановление резервной копии не удалось</string>
   <string name="jailbreak_mode">Режим Jailbreak</string>
-  <string name="contributors">Участники</string>
+  <string name="contributors">Разработчики</string>
   <string name="support">Поддержка</string>
   <string name="home_metamodule_status">Статус мета модуля</string>
   <string name="home_seccomp_status">Статус Seccomp</string>
@@ -324,7 +324,7 @@
   <string name="settings_app_lock_no_credential">Включите экран блокировки.</string>
   <string name="enable_risk">Риски</string>
   <string name="enable_risk_summary">Включите обнаружение рисков при установке модулей.</string>
-  <string name="feature_status_forced_summary">Это функция доступна только при её начилии в ядре.</string>
+  <string name="feature_status_forced_summary">Эта функция доступна только при её наличии в ядре.</string>
   <string name="susfs_load_action">Установить SuSFS LKM</string>
   <string name="susfs_load_button">Установить</string>
   <string name="susfs_load_in_progress">Установка SUSFS LKM...</string>
@@ -339,7 +339,7 @@
   <string name="susfs_load_success">SUSFS LKM прошит</string>
   <string name="susfs_load_failed">Не удалось загрузить SUSFS LKM</string>
   <string name="settings_shell_su_adb_only">Ограничить доступ к Рут через ADB</string>
-  <string name="settings_shell_su_adb_only_summary">Дополнительная проверка при предоставлении оболочке (shell) рут прав (root): использовать их могут только процессы, запущенные через adbd или корневой процесс KernelSU (например, модуль ADB). Это предотвращает ситуацию, когда приложения, получившие права оболочки, могут повысить свои привилегии до уровня рут.</string>
+  <string name="settings_shell_su_adb_only_summary">Рут права могут использовать только процессы, запущенные через adbd или через KernelSUю Это предотвращает ситуацию, когда приложения могут повысить свои привилегии до уровня рут.</string>
   <string name="install_block_modules">Блокировка модулей ядра (Риски)</string>
   <string name="install_block_modules_warning">Запретите загрузку указанных модулей ядра при запуске системы. Блокировка модуля, от которого зависит работа системы, может привести к тому, что устройство зависнет на логотипе загрузки или попадет в бесконечную перезагрузку "бутлуп" (например, модуль MediaTek mkp на некоторых устройствах). Используйте эту функцию, только если уверены, что блокировка данных модулей безопасна для вашего устройства. Чтобы восстановить работоспособность, прошейте через fastboot заводской образ boot или init_boot.</string>
   <string name="install_block_modules_list">Заблокированные модули</string>
