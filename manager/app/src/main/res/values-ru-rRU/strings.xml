@@ -185,17 +185,17 @@
   <string name="zygisk_status">Инъекция Zygisk</string>
   <string name="zygisk">Zygisk</string>
   <string name="home_superuser_count_singular">Рут права</string>
-  <string name="home_superuser_count_plural">Выдано прав</string>
-  <string name="home_module_count_singular">Модуль</string>
-  <string name="home_module_count_plural">Модулей</string>
+  <string name="home_superuser_count_plural">Рут права</string>
+  <string name="home_module_count_singular">Модули</string>
+  <string name="home_module_count_plural">Модули</string>
   <string name="module_sort_enabled_first">Сортировка (сначала включенные)</string>
   <string name="module_sort_action_first">Сортировка (сначала со скриптом)</string>
   <string name="module_sort_webui_first">Сортировка (сначала с Web интерфейсом)</string>
   <string name="meta_module">Мета модуль</string>
   <string name="donate">Пожертвовать</string>
-  <string name="meta_module_screen">Мета модуль</string>
+  <string name="meta_module_screen">Мета модули</string>
   <string name="latest_version">Последняя версия</string>
-  <string name="module_repo_screen">Репозиторий модулей</string>
+  <string name="module_repo_screen">Онлайн Модули</string>
   <string name="loading">Загрузка...</string>
   <string name="retry">Повторить</string>
   <string name="error_loading_modules">Ошибка загрузки модулей</string>
@@ -322,9 +322,9 @@
   <string name="biometric_prompt_subtitle">Открытие клиента</string>
   <string name="biometric_prompt_subtitle_module">Unlock %1$s</string>
   <string name="settings_app_lock_no_credential">Включите экран блокировки.</string>
-  <string name="enable_risk">Риски модулей</string>
+  <string name="enable_risk">Риски</string>
   <string name="enable_risk_summary">Включите обнаружение рисков при установке модулей.</string>
-  <string name="feature_status_forced_summary">This feature is forced by boot config</string>
+  <string name="feature_status_forced_summary">Это функция доступна только при её начилии в ядре.</string>
   <string name="susfs_load_action">Установить SuSFS LKM</string>
   <string name="susfs_load_button">Установить</string>
   <string name="susfs_load_in_progress">Установка SUSFS LKM...</string>
@@ -376,4 +376,6 @@
   <string name="susfs_unload_in_progress">Выгрузка SUSFS LKM...</string>
   <string name="susfs_unload_success">SUSFS LKM выгружен</string>
   <string name="susfs_unload_failed">Не удалось выгрузить SUSFS LKM</string>
+  <string name="soft_reboot_after_module_flash">Мягкая перезагрузка после установки модуля</string>
+  <string name="soft_reboot_after_module_flash_summary">Использовать мягкую перезагрузку вместо полной после установки модуля.</string>
 </resources>
