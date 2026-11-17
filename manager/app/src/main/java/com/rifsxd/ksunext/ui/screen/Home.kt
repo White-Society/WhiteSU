@@ -1260,38 +1260,18 @@ fun ContributorsCard() {
     val uriHandler = LocalUriHandler.current
 
     val contributors = listOf(
+         Contributor(
+            login = "MrGadget84",
+            githubUrl = "https://github.com/MrGadget84",
+            role = "WhiteSU Developer",
+            donationUrl = "https://github.com/MrGadget84"
+        ),
         Contributor(
             login = "rifsxd",
             name = "Rifat Azad",
             githubUrl = "https://github.com/rifsxd",
-            role = "Lead Developer",
+            role = "Author KernelSU Next",
             donationUrl = "https://github.com/KernelSU-Next/KernelSU-Next/tree/dev?tab=readme-ov-file#-donations"
-        ),
-        Contributor(
-            login = "tiann",
-            name = "Weishu",
-            githubUrl = "https://github.com/tiann",
-            role = "KernelSU Author",
-            donationUrl = "https://www.patreon.com/weishu"
-        ),
-        Contributor(
-            login = "fatalcoder524",
-            githubUrl = "https://github.com/fatalcoder524",
-            role = "Frontend Maintainer",
-            donationUrl = "https://github.com/sponsors/fatalcoder524"
-        ),
-        Contributor(
-            login = "pershoot",
-            githubUrl = "https://github.com/pershoot",
-            role = "Backend Maintainer",
-            donationUrl = "https://github.com/sponsors/pershoot"
-        ),
-        Contributor(
-            login = "maxsteeel",
-            name = "Max",
-            githubUrl = "https://github.com/maxsteeel",
-            role = "Legacy Maintainer",
-            donationUrl = "https://github.com/sponsors/maxsteeel"
         )
     )
 
