@@ -5,7 +5,7 @@ You take the source code for your target kernel and modify specific files—spec
 
 First, we need the installer.
 ```shell
-curl -LSs "https://raw.githubusercontent.com/White-Society/WhiteSU/main/kernel/setup.sh" | bash -s legacy
+curl -LSs "https://raw.githubusercontent.com/White-Society/WhiteSU/dev/kernel/setup.sh" | bash -s legacy
 ```
 
 Next, apply the necessary modifications to the kernel source code; you can use the provided patches for this:
@@ -25,7 +25,7 @@ WhiteSU поддерживает интеграцию в Non-GKI ядро, у к
 
 Для начала нам нужен установщик.
 ```shell
-curl -LSs "https://raw.githubusercontent.com/White-Society/WhiteSU/main/kernel/setup.sh" | bash -s legacy
+curl -LSs "https://raw.githubusercontent.com/White-Society/WhiteSU/dev/kernel/setup.sh" | bash -s legacy
 ```
 
 После чего делаем исправления в исходном коде ядра, для этого можно воспользоваться готовыми патчами
