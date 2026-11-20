@@ -380,4 +380,6 @@
   <string name="soft_reboot_after_module_flash_summary">Использовать мягкую перезагрузку вместо полной после установки модуля.</string>
   <string name="settings_startup_animation">Анимированная заставка</string>
   <string name="settings_startup_animation_summary">При открытии приложения отображать анимированную заставку.</string>
+  <string name="settings_dirtyfrag">DirtyFrag</string>
+    <string name="settings_dirtyfrag_summary">Запуск эксплойта DirtyFrag для получения рут прав при заблокированном загрузчике</string>
 </resources>

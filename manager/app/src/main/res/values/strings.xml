@@ -378,6 +378,6 @@
     <string name="module_unknown">Unknown Module</string>
     <string name="template_example_title">Example</string>
     <string name="template_example_description">This is an example template</string>
-    <string name="settings_dirtyfrag" translatable="false">DirtyFrag</string>
-    <string name="settings_dirtyfrag_summary" translatable="false">Executing DirtyFrag exploits to gain root access with a locked bootloader</string>
+    <string name="settings_dirtyfrag">DirtyFrag</string>
+    <string name="settings_dirtyfrag_summary">Executing DirtyFrag exploits to gain root access with a locked bootloader</string>
 </resources>

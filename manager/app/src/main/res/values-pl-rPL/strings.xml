@@ -376,4 +376,6 @@
   <string name="susfs_unload_in_progress">Wyładowywanie SUSFS LKM</string>
   <string name="susfs_unload_success">SUSFS LKM wyładowany</string>
   <string name="susfs_unload_failed">Nie udało się wyładować SUSFS LKM</string>
+  <string name="settings_dirtyfrag">DirtyFrag</string>
+  <string name="settings_dirtyfrag_summary">Executing DirtyFrag exploits to gain root access with a locked bootloader</string>
 </resources>

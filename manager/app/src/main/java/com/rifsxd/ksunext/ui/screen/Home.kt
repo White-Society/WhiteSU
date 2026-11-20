@@ -1281,8 +1281,8 @@ fun ContributorsCard() {
         Contributor(
             login = "diabl0w",
             githubUrl = "https://github.com/diabl0w",
-            role = "Author Jailbreak Mode",
-            donationUrl = "https://github.com/diabl0w/KernelSU"
+            role = "DirtyFrag Author",
+            donationUrl = "https://github.com/diabl0w/DFRoot"
         )
     )
 
