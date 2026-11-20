@@ -819,7 +819,7 @@ private fun AppSettingsCard(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             var DirtyFrag by rememberSaveable {
-                mutableStateOf(prefs.getBoolean("dirtyfrag", true))
+                mutableStateOf(prefs.getBoolean("dirtyfrag", false))
             }
 
             SwitchItem(
