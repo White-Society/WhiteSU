@@ -1263,15 +1263,21 @@ fun ContributorsCard() {
          Contributor(
             login = "MrGadget84",
             githubUrl = "https://github.com/MrGadget84",
-            role = "WhiteSU Developer",
+            role = "WhiteSU Leader",
             donationUrl = "https://github.com/MrGadget84"
         ),
         Contributor(
             login = "rifsxd",
             name = "Rifat Azad",
             githubUrl = "https://github.com/rifsxd",
-            role = "Author KernelSU Next",
+            role = "KSU-Next Developer",
             donationUrl = "https://github.com/KernelSU-Next/KernelSU-Next/tree/dev?tab=readme-ov-file#-donations"
+        ),
+        Contributor(
+            login = "diabl0w",
+            githubUrl = "https://github.com/diabl0w",
+            role = "Author Jailbreak Mode",
+            donationUrl = "https://github.com/diabl0w/KernelSU"
         )
     )
 
