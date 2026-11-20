@@ -1277,6 +1277,12 @@ fun ContributorsCard() {
             githubUrl = "https://github.com/rifsxd",
             role = "KSU-Next Developer",
             donationUrl = "https://github.com/KernelSU-Next/KernelSU-Next/tree/dev?tab=readme-ov-file#-donations"
+        ),
+        Contributor(
+            login = "diabl0w",
+            githubUrl = "https://github.com/diabl0w",
+            role = "Author Jailbreak Mode",
+            donationUrl = "https://github.com/diabl0w/KernelSU"
         )
     )
 

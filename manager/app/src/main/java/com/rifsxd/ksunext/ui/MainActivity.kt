@@ -784,6 +784,12 @@ private fun BottomBar(
                 tonalElevation = 0.dp,
                 shadowElevation = 8.dp
             ) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f))
+                        .blur(radius = 40.dp)     
+                )
                 val itemSize = 56.dp
                 val itemSpacing = 4.dp
                 val containerPadding = 7.dp
