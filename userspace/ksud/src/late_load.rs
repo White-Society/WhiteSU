@@ -136,7 +136,7 @@ pub fn run(package_name: &String, kmi: Option<String>, allow_shell: bool) -> Res
     init_event::run_stage("boot-completed", ScriptWait::NoWait);
 
     // 14. Restart Manager so it gets a fresh ksu fd from the newly loaded kernel module
-    info!("Restarting KernelSU Next Manager {package_name}...");
+    info!("Restarting WhiteSU Manager {package_name}...");
     let _ = Command::new("am").args(["force-stop", package_name]).status();
     let _ = Command::new("am")
         .args([

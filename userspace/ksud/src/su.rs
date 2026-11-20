@@ -197,7 +197,7 @@ pub fn root_shell() -> Result<()> {
     opts.optflag(
         "",
         "ksu-no-new-privs",
-        "Prevent this process (and its children) from privilege re-escalation via KernelSU Next",
+        "Prevent this process (and its children) from privilege re-escalation via WhiteSU",
     );
     opts.optopt("Z", "context", "Specify the SELinux context", "CONTEXT");
 

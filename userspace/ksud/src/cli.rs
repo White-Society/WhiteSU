@@ -13,7 +13,7 @@ use crate::{
     susfsd, utils, risk,
 };
 
-/// KernelSU Next userspace cli
+/// WhiteSU userspace cli
 #[derive(Parser, Debug)]
 #[command(author, version = defs::FULL_VERSION, about, long_about = None)]
 struct Args {
@@ -23,7 +23,7 @@ struct Args {
 
 #[derive(clap::Subcommand, Debug)]
 enum Commands {
-    /// Manage KernelSU Next modules
+    /// Manage WhiteSU modules
     Module {
         #[command(subcommand)]
         command: Module,
@@ -66,16 +66,16 @@ enum Commands {
         params: Vec<String>,
     },
 
-    /// Install KernelSU Next userspace component to system
+    /// Install WhiteSU userspace component to system
     Install {
         #[arg(long, default_value = None)]
         libadbroot: Option<PathBuf>,
     },
 
-    /// Unload KernelSU Next kernel module (LKM Only)
+    /// Unload WhiteSU kernel module (LKM Only)
     Unload,
 
-    /// Uninstall KernelSU Next modules and itself(LKM Only)
+    /// Uninstall WhiteSU modules and itself(LKM Only)
     Uninstall {
         #[arg(long, default_value_t = String::from("com.rifsxd.ksunext"))]
         package_name: String,
@@ -99,7 +99,7 @@ enum Commands {
         command: Feature,
     },
 
-    /// Patch boot or init_boot images to apply KernelSU Next
+    /// Patch boot or init_boot images to apply WhiteSU
     BootPatch(BootPatchArgs),
 
     /// Restore boot or init_boot images patched by KernelSU
@@ -575,7 +575,7 @@ pub fn run() -> Result<()> {
     android_logger::init_once(
         Config::default()
             .with_max_level(crate::debug_select!(LevelFilter::Trace, LevelFilter::Info))
-            .with_tag("KernelSU Next"),
+            .with_tag("WhiteSU"),
     );
 
     ksucalls::setup_sigsys_handler();
@@ -732,7 +732,7 @@ pub fn run() -> Result<()> {
         } => crate::late_load::run(&package_name, kmi, allow_shell),
         Commands::Services => {
             if ksucalls::get_version() <= 0 {
-                info!("KernelSU Next not available, exiting services");
+                info!("WhiteSU not available, exiting services");
                 std::process::exit(0);
             }
             init_event::on_services();

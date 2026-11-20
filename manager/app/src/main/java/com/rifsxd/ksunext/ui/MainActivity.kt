@@ -74,6 +74,9 @@ import com.rifsxd.ksunext.ui.theme.KernelSUTheme
 import com.rifsxd.ksunext.ui.util.*
 import com.rifsxd.ksunext.ui.viewmodel.ModuleViewModel
 import com.rifsxd.ksunext.ui.viewmodel.SuperUserViewModel
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.padding
 
 data class ScrollState(
     val isScrollingDown: MutableState<Boolean>,
@@ -777,7 +780,8 @@ private fun BottomBar(
             Surface(
                 modifier = Modifier.wrapContentWidth(),
                 shape = RoundedCornerShape(24.dp),
-                tonalElevation = 3.dp,
+                color = Color.Transparent,
+                tonalElevation = 0.dp,
                 shadowElevation = 8.dp
             ) {
                 val itemSize = 56.dp
@@ -869,7 +873,7 @@ private fun BottomBar(
                                     modifier = Modifier
                                         .size(itemSize)
                                         .background(
-                                            color = MaterialTheme.colorScheme.secondaryContainer,
+                                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.90f),
                                             shape = RoundedCornerShape(16.dp)
                                         )
                                 )
