@@ -802,6 +802,89 @@ private fun SusfsLoadBottomSheet(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DirtyFragSettingsBottomSheet(
+    enabled: Boolean,
+    startAtBoot: Boolean,
+    autoSoftReboot: Boolean,
+    disableKsuModules: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+    onStartAtBootChange: (Boolean) -> Unit,
+    onAutoSoftRebootChange: (Boolean) -> Unit,
+    onDisableKsuModulesChange: (Boolean) -> Unit,
+
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.settings_dirtyfrag),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            DirtyFragSwitchItem(
+                title = stringResource(R.string.dirtyfrag_enabled),
+                summary = stringResource(R.string.dirtyfrag_enabled_summary),
+                checked = enabled,
+                onCheckedChange = onEnabledChange
+            )
+            DirtyFragSwitchItem(
+                title = stringResource(R.string.dirtyfrag_start_at_boot),
+                summary = stringResource(R.string.dirtyfrag_start_at_boot_summary),
+                checked = startAtBoot,
+                onCheckedChange = onStartAtBootChange
+            )
+            DirtyFragSwitchItem(
+                title = stringResource(R.string.dirtyfrag_auto_soft_reboot),
+                summary = stringResource(R.string.dirtyfrag_auto_soft_reboot_summary),
+                checked = autoSoftReboot,
+                onCheckedChange = onAutoSoftRebootChange
+            )
+            DirtyFragSwitchItem(
+                title = stringResource(R.string.dirtyfrag_disable_ksu_modules),
+                summary = stringResource(R.string.dirtyfrag_disable_ksu_modules_summary),
+                checked = disableKsuModules,
+                onCheckedChange = onDisableKsuModulesChange
+            )
+        }
+    }
+}
+
+@Composable
+private fun DirtyFragSwitchItem(
+    title: String,
+    summary: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    ListItem(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .toggleable(
+                value = checked,
+                role = Role.Switch,
+                onValueChange = onCheckedChange
+            ),
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        headlineContent = { Text(title) },
+        supportingContent = { Text(summary) },
+        trailingContent = {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
+            )
+        }
+    )
+}
+
 @Composable
 private fun AppSettingsCard(
     navigator: DestinationsNavigator,
@@ -818,20 +901,63 @@ private fun AppSettingsCard(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            var DirtyFrag by rememberSaveable {
+            var showDirtyFragSheet by rememberSaveable { mutableStateOf(false) }
+            var dirtyFragEnabled by rememberSaveable {
                 mutableStateOf(prefs.getBoolean("dirtyfrag", false))
             }
+            var dirtyFragStartAtBoot by rememberSaveable {
+                mutableStateOf(prefs.getBoolean("dirtyfrag_start_at_boot", false))
+            }
+            var dirtyFragAutoSoftReboot by rememberSaveable {
+                mutableStateOf(prefs.getBoolean("dirtyfrag_auto_soft_reboot", false))
+            }
+            var dirtyFragDisableModules by rememberSaveable {
+                mutableStateOf(prefs.getBoolean("dirtyfrag_disable_ksu_modules", false))
+            }
 
-            SwitchItem(
-                icon = Icons.Filled.Memory,
-                title = stringResource(R.string.settings_dirtyfrag),
-                summary = stringResource(R.string.settings_dirtyfrag_summary),
-                checked = DirtyFrag,
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-            ) {
-                prefs.edit { putBoolean("dirtyfrag", it) }
-                DirtyFrag = it
+            ListItem(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { showDirtyFragSheet = true },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                leadingContent = { Icon(Icons.Filled.Memory, null) },
+                headlineContent = {
+                    Text(
+                        text = stringResource(R.string.settings_dirtyfrag),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                supportingContent = {
+                    Text(stringResource(R.string.settings_dirtyfrag_summary))
+                }
+            )
+
+            if (showDirtyFragSheet) {
+                DirtyFragSettingsBottomSheet(
+                    enabled = dirtyFragEnabled,
+                    startAtBoot = dirtyFragStartAtBoot,
+                    disableKsuModules = dirtyFragDisableModules,
+                    autoSoftReboot = dirtyFragAutoSoftReboot,
+                    onEnabledChange = {
+                        dirtyFragEnabled = it
+                        prefs.edit { putBoolean("dirtyfrag", it) }
+                    },
+                    onStartAtBootChange = {
+                        dirtyFragStartAtBoot = it
+                        prefs.edit { putBoolean("dirtyfrag_start_at_boot", it) }
+                    },
+                    onAutoSoftRebootChange = {
+                        dirtyFragAutoSoftReboot = it
+                        prefs.edit { putBoolean("dirtyfrag_auto_soft_reboot", it) }
+                    },
+                    onDisableKsuModulesChange = {
+                        dirtyFragDisableModules = it
+                        prefs.edit { putBoolean("dirtyfrag_disable_ksu_modules", it) }
+                    },
+                    onDismiss = { showDirtyFragSheet = false }
+                )
             }
 
             var checkUpdate by rememberSaveable {

@@ -379,5 +379,13 @@
     <string name="template_example_title">Example</string>
     <string name="template_example_description">This is an example template</string>
     <string name="settings_dirtyfrag" translatable="false">DirtyFrag</string>
-    <string name="settings_dirtyfrag_summary" translatable="false">Executing DirtyFrag exploits to gain root access with a locked bootloader</string>
+    <string name="settings_dirtyfrag_summary" translatable="false">Executing DirtyFrag exploits to gain root access with a locked bootloader.</string>
+    <string name="dirtyfrag_enabled" translatable="false">Enable DirtyFrag</string>
+    <string name="dirtyfrag_enabled_summary" translatable="false">Activates DirtyFrag to gain root access.</string>
+    <string name="dirtyfrag_start_at_boot" translatable="false">Start at Boot</string>
+    <string name="dirtyfrag_start_at_boot_summary" translatable="false">Automatically run DFRoot on device boot.</string>
+    <string name="dirtyfrag_auto_soft_reboot" translatable="false">Auto Soft Reboot</string>
+    <string name="dirtyfrag_auto_soft_reboot_summary" translatable="false">Applies to both Manual Start and Start at Boot.</string>
+    <string name="dirtyfrag_disable_ksu_modules" translatable="false">Disable KSU Modules</string>
+    <string name="dirtyfrag_disable_ksu_modules_summary" translatable="false">Turn this on if a broken module is crashing your device. The next run will launch with all modules disabled.</string>
 </resources>
