@@ -137,7 +137,7 @@ endif
 
 # Calculate version if git version is available
 ifdef KSU_GIT_VERSION_VALID
-$(eval KSU_VERSION=$(shell expr 30000 + $(KSU_GIT_VERSION) + 343))
+$(eval KSU_VERSION=$(shell expr 30000 + $(KSU_GIT_VERSION) + 533))
 $(info -- WhiteSU version: $(KSU_VERSION))
 else
 # If there is no .git directory, use default version
@@ -162,7 +162,7 @@ ifdef KSU_GIT_VERSION_VALID
 $(eval KSU_VERSION_TAG=$(KSU_GIT_TAG))
 else
 $(warning "KSU_VERSION_TAG not defined! It is better to make WhiteSU a git submodule!")
-KSU_VERSION_TAG_FALLBACK := v0.0.6
+KSU_VERSION_TAG_FALLBACK := v0.0.5
 KSU_VERSION_TAG=$(KSU_VERSION_TAG_FALLBACK)
 endif
 
