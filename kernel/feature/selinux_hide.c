@@ -671,8 +671,8 @@ static int ksu_selinux_hide_enable()
 #if defined(CONFIG_KSU_SAMSUNG_RKP) && defined(__aarch64__)
     ret = samsung_register_kprobe(&samsung_context_kprobe, orig_context_write, &samsung_context_registered);
 #else
-    write_op_fn my = my_write_context;
-    ret = ksu_patch_text(context_write, &my, sizeof(my), KSU_PATCH_TEXT_FLUSH_DCACHE);
+    write_op_fn my_context = my_write_context;
+    ret = ksu_patch_text(context_write, &my_context, sizeof(my_context), KSU_PATCH_TEXT_FLUSH_DCACHE);
 #endif
     if (ret) {
         pr_err("selinux_hide: init: patch_text context_write err: %d\n", ret);
@@ -685,8 +685,8 @@ static int ksu_selinux_hide_enable()
 #if defined(CONFIG_KSU_SAMSUNG_RKP) && defined(__aarch64__)
     ret = samsung_register_kprobe(&samsung_access_kprobe, orig_access_write, &samsung_access_registered);
 #else
-    write_op_fn my = my_write_access;
-    ret = ksu_patch_text(access_write, &my, sizeof(my), KSU_PATCH_TEXT_FLUSH_DCACHE);
+    write_op_fn my_access = my_write_access;
+    ret = ksu_patch_text(access_write, &my_access, sizeof(my_access), KSU_PATCH_TEXT_FLUSH_DCACHE);
 #endif
     if (ret) {
         pr_err("selinux_hide: init: patch_text access_write err: %d\n", ret);

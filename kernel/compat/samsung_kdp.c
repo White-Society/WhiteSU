@@ -179,6 +179,7 @@ int ksu_samsung_kdp_commit_creds(struct cred *cred)
 		return -EBUSY;
 	}
 	wait_for_completion(&commit_work.completion);
+	flush_work(&commit_work.work);
 	put_task_struct(commit_work.target);
 	return commit_work.result;
 #else

@@ -235,6 +235,7 @@ out_abort_creds:
 
 void escape_to_root_for_init(void)
 {
+    int ret;
     struct cred *cred = prepare_creds();
     if (!cred) {
         pr_err("Failed to prepare init's creds!\n");
@@ -242,7 +243,12 @@ void escape_to_root_for_init(void)
     }
 
 	setup_selinux(KERNEL_SU_CONTEXT, cred);
-	commit_creds(cred);
+	ret = ksu_samsung_kdp_commit_creds(cred);
+	if (ret) {
+		pr_err("Samsung KDP init credential install failed: %d\n", ret);
+		abort_creds(cred);
+		return;
+	}
 	ksu_samsung_defex_sync_current();
 }
 
