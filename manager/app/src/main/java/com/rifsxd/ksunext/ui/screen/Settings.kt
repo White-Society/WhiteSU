@@ -805,15 +805,13 @@ private fun SusfsLoadBottomSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DirtyFragSettingsBottomSheet(
-    enabled: Boolean,
     startAtBoot: Boolean,
-    autoSoftReboot: Boolean,
     disableKsuModules: Boolean,
-    onEnabledChange: (Boolean) -> Unit,
+    autoSoftReboot: Boolean,
     onStartAtBootChange: (Boolean) -> Unit,
     onAutoSoftRebootChange: (Boolean) -> Unit,
     onDisableKsuModulesChange: (Boolean) -> Unit,
-
+    onInstall: () -> Unit,
     onDismiss: () -> Unit
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -822,18 +820,17 @@ private fun DirtyFragSettingsBottomSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
                 text = stringResource(R.string.settings_dirtyfrag),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
-            DirtyFragSwitchItem(
-                title = stringResource(R.string.dirtyfrag_enabled),
-                summary = stringResource(R.string.dirtyfrag_enabled_summary),
-                checked = enabled,
-                onCheckedChange = onEnabledChange
+            Text(
+                text = stringResource(R.string.settings_dirtyfrag_summary),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             DirtyFragSwitchItem(
                 title = stringResource(R.string.dirtyfrag_start_at_boot),
@@ -853,6 +850,12 @@ private fun DirtyFragSettingsBottomSheet(
                 checked = disableKsuModules,
                 onCheckedChange = onDisableKsuModulesChange
             )
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onInstall
+            ) {
+                Text(stringResource(R.string.dirtyfrag_install))
+            }
         }
     }
 }
@@ -902,9 +905,6 @@ private fun AppSettingsCard(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             var showDirtyFragSheet by rememberSaveable { mutableStateOf(false) }
-            var dirtyFragEnabled by rememberSaveable {
-                mutableStateOf(prefs.getBoolean("dirtyfrag", false))
-            }
             var dirtyFragStartAtBoot by rememberSaveable {
                 mutableStateOf(prefs.getBoolean("dirtyfrag_start_at_boot", false))
             }
@@ -936,14 +936,9 @@ private fun AppSettingsCard(
 
             if (showDirtyFragSheet) {
                 DirtyFragSettingsBottomSheet(
-                    enabled = dirtyFragEnabled,
                     startAtBoot = dirtyFragStartAtBoot,
                     disableKsuModules = dirtyFragDisableModules,
                     autoSoftReboot = dirtyFragAutoSoftReboot,
-                    onEnabledChange = {
-                        dirtyFragEnabled = it
-                        prefs.edit { putBoolean("dirtyfrag", it) }
-                    },
                     onStartAtBootChange = {
                         dirtyFragStartAtBoot = it
                         prefs.edit { putBoolean("dirtyfrag_start_at_boot", it) }
@@ -955,6 +950,9 @@ private fun AppSettingsCard(
                     onDisableKsuModulesChange = {
                         dirtyFragDisableModules = it
                         prefs.edit { putBoolean("dirtyfrag_disable_ksu_modules", it) }
+                    },
+                    onInstall = {
+                        Toast.makeText(context, R.string.feature_not_implemented, Toast.LENGTH_SHORT).show()
                     },
                     onDismiss = { showDirtyFragSheet = false }
                 )
