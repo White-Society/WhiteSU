@@ -818,6 +818,22 @@ private fun AppSettingsCard(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            var DirtyFrag by rememberSaveable {
+                mutableStateOf(prefs.getBoolean("dirtyfrag", false))
+            }
+
+            SwitchItem(
+                icon = Icons.Filled.Memory,
+                title = stringResource(R.string.settings_dirtyfrag),
+                summary = stringResource(R.string.settings_dirtyfrag_summary),
+                checked = DirtyFrag,
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            ) {
+                prefs.edit { putBoolean("dirtyfrag", it) }
+                DirtyFrag = it
+            }
+
             var checkUpdate by rememberSaveable {
                 mutableStateOf(prefs.getBoolean("check_update", true))
             }
