@@ -911,21 +911,22 @@ int ksu_lsm_hook(struct ksu_lsm_hook *hook)
 
     /* ---- replace path: find the entry whose function slot holds the resolved symbol. ---- */
     target_name = hook->target_name;
-    if (!target_name) {
-        pr_err("lsm_hook: hook %s: target_name is required\n", hook->head_name ?: "unknown");
-        ret = -EINVAL;
-        goto out_unlock;
-    }
-
     target = hook->original;
-    if (!target)
+    if (!target && target_name)
         target = ksu_resolve_symbol_for_functable_hook(target_name);
     if (!target) {
-        pr_err("lsm_hook: failed to resolve target for %s\n", hook->head_name ?: "unknown");
-        ret = -ENOENT;
-        goto out_unlock;
+        /* An LTO copy can have a different address than the kallsyms symbol (the
+         * registered selinux_setprocattr is one example).  The replace path knows
+         * the head, so fall back to its first entry: original becomes whatever
+         * function is installed there, and the wrapper still calls it for the
+         * pass-through.  Android runs SELinux as the only provider in these
+         * lists, so the first entry is the SELinux one.  target_name may also be
+         * NULL on purpose: the consumer wants the first entry, not a symbol. */
+        SUSFS_LOGI("lsm_hook: target %s not resolvable; falling back to the first entry of head %s\n",
+                target_name ?: "(none)", hook->head_name ?: "unknown");
+    } else {
+        SUSFS_LOGI("target: 0x%lx %pSb\n", (unsigned long)target, target);
     }
-    SUSFS_LOGI("target: 0x%lx %pSb\n", (unsigned long)target, target);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 0)
     if (!scalls_addr) {
@@ -1088,6 +1089,31 @@ int ksu_lsm_hook(struct ksu_lsm_hook *hook)
     SUSFS_LOGI("heads_addr 0x%lx head_offset 0x%lx heads_size %ld hook_offset 0x%lx\n", (unsigned long)heads_addr,
             hook->head_offset, heads_size, hook->hook_offset);
 
+    if (!target) {
+        struct hlist_head *fallback_head =
+            (struct hlist_head *)(heads_addr + hook->head_offset);
+
+        if (!fallback_head->first) {
+            pr_err("lsm_hook: %s has no entries to replace\n",
+                    hook->head_name ?: "unknown");
+            ret = -ENOENT;
+            goto out_unlock;
+        }
+        entry = hlist_entry(fallback_head->first, struct security_hook_list, list);
+        selected_entry = entry;
+        selected_slot = (void **)((char *)entry + hook->hook_offset);
+        selected_origin = READ_ONCE(*selected_slot);
+        if (selected_origin == hook->replacement) {
+            ret = -EALREADY;
+            goto out_unlock;
+        }
+        SUSFS_LOGI("lsm_hook: fallback %s first entry orig %pSb\n",
+                hook->head_name ?: "unknown", selected_origin);
+        pr_warn("lsm_hook: WARNING: %s slot being taken by %s; displaced function %pSb (continuing install)\n",
+                hook->head_name ?: "unknown", "the first entry", selected_origin);
+        goto fallback_found;
+    }
+
     for (; head < head_end; head++) {
         hlist_for_each_entry (entry, head, list) {
             void **slot = (void **)((char *)entry + hook->hook_offset);
@@ -1147,6 +1173,7 @@ int ksu_lsm_hook(struct ksu_lsm_hook *hook)
         }
     }
 
+fallback_found:
     if (!selected_entry) {
         pr_err("lsm_hook: target %s not found in head %s\n", target_name, hook->head_name ?: "unknown");
         ret = -ENOENT;
